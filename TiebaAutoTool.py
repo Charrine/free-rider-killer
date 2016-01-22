@@ -30,7 +30,7 @@ def sendRequest(url, postdata):
 	return
 
 # delete a post with its tid and pid 
-def deletePost(tid, pid):
+def deletePost(threadData):
 	print '--- Sending Delete Request ---'
 	tbs = eval(urllib2.urlopen('http://tieba.baidu.com/dc/common/tbs').read())['tbs']
 	postdata = {
@@ -39,28 +39,29 @@ def deletePost(tid, pid):
 		'tbs' : tbs,
 		'kw' : 'c%E8%AF%AD%E8%A8%80',
 		'fid' : '22545',
-		'tid' : tid, #tie zi id: e.g.'4304106830'
+		'tid' : threadData['tid'], #tie zi id: e.g.'4304106830'
 		'is_vipdel' : '0',
-		'pid' : pid, #lou ceng id: e.g.'82457746974'
+		'pid' : threadData['pid'], #lou ceng id: e.g.'82457746974'
 		'is_finf' : 'false'
 	}
-	sendRequest('http://tieba.baidu.com/f/commit/post/delete', postdata)
+	#sendRequest('http://tieba.baidu.com/f/commit/post/delete', postdata)
 	return
 
 # block list of user with their username and pid(pid may not be necessary)
-def blockID(usernames, pids):
+def blockID(threadData):
 	print '--- Sending Block Request ---'
+	constantPid = '82459413573'
 	tbs = eval(urllib2.urlopen('http://tieba.baidu.com/dc/common/tbs').read())['tbs']
 	postdata = {
 		'day' : '1',
 		'fid' : '22545',
 		'tbs' : tbs,
 		'ie' : 'utf-8',
-		'user_name[]': usernames,
-		'pids[]' : pids, 
+		'user_name[]': threadData['author'],
+		'pids[]' : constantPid, 
 		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	}
-	sendRequest('http://tieba.baidu.com/pmc/blockid', postdata)
+	#sendRequest('http://tieba.baidu.com/pmc/blockid', postdata)
 	return
 
 # tieba admin user login
@@ -109,22 +110,25 @@ def main(argv):
 
 		for thread in threadList[topThreadNum:]:
 			dataField = json.loads(thread['data-field'])
-			author = dataField['author_name']
-			tid = dataField['id']
-			pid = dataField['first_post_id']
-			goodThread = dataField['is_good']
-			topThread = dataField['is_top']
-			title = thread.select('a.j_th_tit')[0].string
-			abstract = thread.select('div.threadlist_abs')[0].string
-			
-			if any(word in title for word in keywords) or ((abstract != None) and any(word in abstract for word in keywords)):
-				if goodThread == 0 and topThread == 0:
+			threadData = {
+				'title' : thread.select('a.j_th_tit')[0].string,
+				'author' : dataField['author_name'].encode('utf-8'),
+				'abstract' : thread.select('div.threadlist_abs')[0].string,
+				'tid' : dataField['id'],
+				'pid' : dataField['first_post_id'],
+				'goodThread' : dataField['is_good'],
+				'topThread' : dataField['is_top'],
+				'replyNum' : dataField['reply_num']
+			}
+
+			if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
+				if any(word in threadData['title'] for word in keywords) or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
 					deleteCount += 1
-					print title
-					print author
-					print abstract
-					deletePost(tid, pid)
-					#blockID(author.encode('utf-8'), '82459413573')
+					print threadData['title']
+					print threadData['author']
+					print threadData['abstract']
+					deletePost(threadData)
+					blockID(threadData)
 					time.sleep(3)
 
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
