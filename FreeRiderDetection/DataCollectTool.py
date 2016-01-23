@@ -5,6 +5,7 @@ import cookielib
 import sys
 import bs4
 import json
+import codecs
 
 # 'generic' tieba request
 def sendRequest(url, postdata):
@@ -57,9 +58,12 @@ def main(argv):
 	password = sys.argv[2]
 	print username
 	adminLogin(username, password)
+	f = codecs.open('freeRiderData.txt', 'w', encoding='utf8')
+	with codecs.open('noisyData.txt', 'r', encoding='utf8') as fnoise:
+		dataNoisy = fnoise.readlines()
 
-	f = open('freeRiderData.txt', 'w')
 	datalink = 'http://tieba.baidu.com/bawu2/platform/listPostLog?stype=&svalue=&begin=&end=&op_type=&word=c%D3%EF%D1%D4&pn='
+
 	for i in range(100,200):
 		datalink+str(i)
 		request = urllib2.Request(datalink+str(i))
@@ -72,10 +76,15 @@ def main(argv):
 			links = thread.find_all('a')
 			for link in links:
 				title = link.get('title')
-				if title != None:
+				print title
+				f.write(title)
+				f.write('\n')
+				'''
+				if title != None and not any(data in title for data in dataNoisy):
 					print title
-					f.write(title.encode('utf-8'))
+					f.write(title)
 					f.write('\n')
+				'''
 	return
 
 if __name__ == '__main__':
