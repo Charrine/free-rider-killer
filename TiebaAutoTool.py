@@ -9,7 +9,7 @@ import json
 
 #Set username and password
 
-keywords = [u'求代码', u'求教', u'求助', u'在线等', u'求帮助', u'二级', u'帮做', u'大神', u'哪里错了', u'帮我看', u'小白求', u'为什么']
+keywords = [u'急求', u'烫', u'求解', u'帮我', u'求指', u'求问', u'求代码', u'求教', u'求助', u'在线等', u'求帮', u'帮忙', u'二级', u'帮做', u'大神', u'哪里错了', u'帮我看', u'小白求', u'为什么', u'国二']
 
 # 'generic' tieba request
 def sendRequest(url, postdata):
@@ -142,14 +142,16 @@ def main(argv):
 			}
 
 			if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-				if any(word in threadData['title'] for word in keywords) or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
+				if any(word in threadData['title'] for word in keywords) \
+				 or u'求' in threadData['title'][0] or ((threadData['abstract'] != None) and u'求' in threadData['abstract'][0]) \
+				 or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
 					deleteCount += 1
 					print threadData['title']
 					print threadData['author']
 					print threadData['abstract']
 					deletePost(threadData)
 					#blockID(threadData)
-					time.sleep(3)
+					time.sleep(5)
 
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
 
