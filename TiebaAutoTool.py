@@ -9,7 +9,7 @@ import json
 
 #Set username and password
 
-keywords = [u'求代码', u'求教', u'求助', u'在线等', u'求帮助', u'二级', u'帮做', u'大神', u'哪里错了', u'帮我看', u'小白求', u'为什么']
+keywords = [u'急求', u'烫', u'求解', u'帮我', u'求指', u'求问', u'求代码', u'求教', u'求助', u'在线等', u'求帮', u'帮忙', u'二级', u'帮做', u'大神', u'哪里错了', u'帮我看', u'小白求', u'为什么', u'国二']
 
 # 'generic' tieba request
 def sendRequest(url, postdata):
@@ -117,7 +117,9 @@ def main(argv):
 			title = thread.select('a.j_th_tit')[0].string
 			abstract = thread.select('div.threadlist_abs')[0].string
 			
-			if any(word in title for word in keywords) or ((abstract != None) and any(word in abstract for word in keywords)):
+			if any(word in title for word in keywords) \
+				 or u'求' in title[0] or ((abstract != None) and u'求' in abstract[0]) \
+				 or ((abstract != None) and any(word in abstract for word in keywords)):
 				if goodThread == 0 and topThread == 0:
 					deleteCount += 1
 					print title
@@ -125,7 +127,7 @@ def main(argv):
 					print abstract
 					deletePost(tid, pid)
 					#blockID(author.encode('utf-8'), '82459413573')
-					time.sleep(3)
+					time.sleep(5)
 
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
 
