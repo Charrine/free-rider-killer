@@ -6,10 +6,45 @@ import bs4
 import time
 import sys, getopt
 import json
+import re
 
-#Set username and password
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
 
-keywords = [u'急求', u'烫', u'求解', u'帮我', u'求指', u'求问', u'求代码', u'求教', u'求助', u'在线等', u'求帮', u'帮忙', u'二级', u'帮做', u'大神', u'哪里错了', u'帮我看', u'小白求', u'为什么', u'国二']
+keywords=[
+[u'求',		40],
+[u'写c',	50],
+[u'求助',	100],
+[u'新人',	50],
+[u'小白',	50],
+[u'新手',	40],
+[u'出错了',	50],
+[u'求资源',	200],
+[u'题',		50],
+[u'大神', 	100],
+[u'vc6.0',	50],
+[u'求大神',	200],
+[u'求高手',	100],
+[u'请大神',	100],
+[u'帮忙',	50],
+[u'考试',	40],
+[u'作业',	40],
+[u'谁来帮我',400],
+[u'？？',	100],
+[u'！！',	100],
+[u'为什么',	50],
+[u'帮我',	100],
+[u'二级',	100],
+[u'计算机二级', 500],
+[u'跪求',	500],
+[u'在线等',	500],
+[u'救急',	15],
+[u'题库',	200],
+[u'不会',	30],
+[u'2级',	100],
+[u'安装包',	100],
+[u'include', 100]
+]
 
 # 'generic' tieba request
 def sendRequest(url, postdata):
@@ -106,23 +141,110 @@ def adminLogin(username, password):
 	return
 
 
-def main(argv):
-	print "Get argument: {0}".format(len(argv))
-	if len(argv) != 2:
-		print 'tiebaAutoTool.py <ID_OF_ADMIN> <PASSWORD>'
+def judge(threadData):
+	titleGrade   = 0
+	previewGrade = 0
+
+	preview = (u'None' if threadData['abstract'] == None else threadData['abstract'])
+	# print keywords[1][0]
+	for keyword in keywords:
+		arr = re.findall(keyword[0], threadData['title'])
+		if len(arr):
+			titleGrade += len(arr) * keyword[1]
+
+		arr = re.findall(keyword[0], preview)
+		if len(arr):
+			previewGrade += len(arr) * keyword[1]
+
+	grade = titleGrade / len(threadData['title']) + previewGrade / len(preview) * 1.2
+
+	return grade
+
+def parseArgument():
+	import argparse
+	config = {}
+	parser = argparse.ArgumentParser()
+
+	parser.add_argument('choices', choices=['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
+	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest='filename', default='tieba.json')
+	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
+	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
+	parser.add_argument('-v','--version', action="version", help = u'显示版本信息并退出', version='0.1')
+	args = parser.parse_args()
+
+	if args.choices == 'run':
+		if args.username != None:
+			config['username'] = args.username
+			if args.password == None:
+				print u'错误：未指定密码，-u选项必须和-p选项连用\n'
+				parser.print_help()
+				sys.exit(1)
+
+			config['password'] = args.password
+			config['type'] = 'argument'
+		else:
+			config['filename'] = args.filename
+			config['type'] = 'json'
+	else:
+		config['type'] = 'config'
+
+	return config
+
+def configure():
+	print u'请输入配置文件名'
+	#Todo 根据用户的输入生成配置文件
+
+
+def getConfigrations(config):
+	print u'使用配置文件：' + config['filename'] + '...\n'
+	
+
+	try:
+		f = file(config['filename'])
+	except IOError, e:
+		print u'无法打开配置文件，文件可能不存在'
+	finally:
+		pass
+	jsonobj = json.load(f)
+	f.close()
+
+	if 'username' in jsonobj and 'password' in jsonobj:
+		config['username'] = jsonobj['username']
+		config['password'] = jsonobj['password']
+
+	else:
+		print u'无效的配置文件，请使用TiebaAutoTool.py config来生成配置文件'
 		sys.exit(2)
 
-	username = sys.argv[1]
-	password = sys.argv[2]
-	print "Current username: " + username
 
-	adminLogin(username, password)
+
+
+def main(argv):
+	grade = 0
+	config = parseArgument()
+	if config['type'] == 'config':
+		configure()
+		sys.exit(0)
+
+	if config['type'] == 'json':
+		getConfigrations(config)
+
+	print u'使用用户名：' + config['username']
+
+	# exit(0)
+
+	adminLogin(config['username'],config['password'])
 
 	while(True):
 		deleteCount = 0
 		request = urllib2.Request('http://tieba.baidu.com/f?kw=c语言')
 		connection = urllib2.urlopen(request)
-		html = connection.read()
+
+
+		# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
+		# there will be a error occured when you trying to print threadData['abstract'] to console
+
+		html = connection.read().decode('utf8').encode('gbk','replace').decode('gbk')
 		connection.close()
 		soup = bs4.BeautifulSoup(html, 'html.parser');
 		threadList = soup.select('.j_thread_list')
@@ -141,19 +263,30 @@ def main(argv):
 				'replyNum' : dataField['reply_num']
 			}
 
+			#threadData['abstract'] maybe None, and this may cause a lot of problems!!!
+
+			threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
 			if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-				if any(word in threadData['title'] for word in keywords) \
-				 or u'求' in threadData['title'][0] or ((threadData['abstract'] != None) and u'求' in threadData['abstract'][0]) \
-				 or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
+				grade  = judge(threadData)
+				if grade > 6:
+					# print type(threadData['abstract'])
+					print u'------------------------------------------\n|作者：' + threadData['author']
+					print u'\n|帖子标题：' + threadData['title'] 
+					print u'\n|帖子预览：' + threadData['abstract']
+					print u'\n|得分：%f' % grade
+					print u'\n-------------------------------------------\n\n'
+				# if any(word in threadData['title'] for word in keywords) or u'求' in threadData['title'][0] or ((threadData['abstract'] != None) and u'求' in threadData['abstract'][0]) \
+				 # or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
 					deleteCount += 1
-					print threadData['title']
-					print threadData['author']
-					print threadData['abstract']
 					deletePost(threadData)
 					#blockID(threadData)
-					time.sleep(5)
-
+					time.sleep(5)	
+	
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
+
+		if deleteCount == 0:
+			print 'Waiting for more post...'
+			time.sleep(60)
 
 	return
 
