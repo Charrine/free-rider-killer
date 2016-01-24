@@ -218,6 +218,7 @@ def getConfigrations(config):
 		f = file(config['filename'])
 	except IOError, e:
 		print u'无法打开配置文件，文件可能不存在'
+		sys.exit(1)
 	finally:
 		pass
 	jsonobj = json.load(f)
