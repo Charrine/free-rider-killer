@@ -125,10 +125,21 @@ def adminLogin(username, password):
 	cj = cookielib.CookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 	urllib2.install_opener(opener)
+
 	print '--- Geting Cookie ---'
-	link = urllib2.urlopen('http://www.baidu.com/')
+	connection = urllib2.urlopen('http://www.baidu.com/')
+	connection.close()
+
 	print '--- Geting Token ---'
-	token = eval(urllib2.urlopen('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login').read())['data']['token']
+	connection = urllib2.urlopen('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login')
+	token = json.loads(connection.read().replace('\'', '"'))['data']['token']
+	connection.close()
+
+	#print '--- Checking Verify Code ---'
+	#connection = urllib2.urlopen('https://passport.baidu.com/v2/api/?logincheck&tpl=pp&apiver=v3&token=' + token + 'username=' + username)
+	#hasVerifyCode = json.loads(connection.read())['data']['codeString']
+	#connection.close()
+
 	print '--- Sending Signin Request ---'
 	postdata = {
 		'token' : token,
@@ -137,9 +148,13 @@ def adminLogin(username, password):
 		'password' : password,
 	}
 	sendRequest('https://passport.baidu.com/v2/api/?login', postdata)
-	link.close()
-	return
 
+	if 'BDUSS' in str(cj):
+		print " Login succeessful"
+		return True
+	else:
+		print " Login failed"
+		return False
 
 def judge(threadData):
 	titleGrade   = 0
@@ -218,7 +233,6 @@ def getConfigrations(config):
 
 
 
-
 def main(argv):
 	grade = 0
 	config = parseArgument()
@@ -233,9 +247,11 @@ def main(argv):
 
 	# exit(0)
 
-	adminLogin(config['username'],config['password'])
+	# adminLogin(config['username'],config['password'])
 
-	while(True):
+	isLogined = adminLogin(config['username'],config['password'])
+
+	while(isLogined):
 		deleteCount = 0
 		request = urllib2.Request('http://tieba.baidu.com/f?kw=c语言')
 		connection = urllib2.urlopen(request)
