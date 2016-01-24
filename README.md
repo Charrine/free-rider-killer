@@ -21,19 +21,19 @@
 
 您还可以使用一个json格式的配置文件来保存你的用户名和密码，例如配置文件为tieba.json，那么它看起来应该想下面这样
 
-    {
-	"username":"您的用户名",
-	"password":"您的密码"
+	{
+		"username" : "您的用户名",
+		"password" : "您的密码"
 	}
 然后，你可以使用下面的方法来启动删贴机
 
-    python2 TiebaAutoTool.py run -c tieba.json
-    
- 如果您不给出文件名参数
- 
-    python2 TiebaAutoTool.py run
- 
- 那么将使用默认的配置文件名，即程序目录下的tieba.json
+	python2 TiebaAutoTool.py run -c tieba.json
+
+如果您不给出文件名参数
+
+	python2 TiebaAutoTool.py run
+
+那么将使用默认的配置文件名，即程序目录下的tieba.json
 
 
 ----------
