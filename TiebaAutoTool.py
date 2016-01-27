@@ -114,22 +114,12 @@ def deleteThread(threadData):
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
-		logFile = open('log.txt', 'a')
-		logFile.write('{\n')
-		logFile.write('    "type" : "delete",\n')
-		logFile.write('    "data" : {\n')
-		logFile.write('        "time" : "' + time.asctime() + '",\n')
-		logFile.write('        "title" : "' + threadData['title'].encode('utf-8') + '",\n')
-		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-		logFile.write('        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n')
-		logFile.write('    }\n')
-		logFile.write('},\n')
-		logFile.close()
-
+		writeLog(threadData, 'delete')
 		return True
 	else:
 		print '--- Delete failed ---'
-
+		#exit for testing
+		sys.exit(3)
 		return False
 
 # block list of user with their username and pid(pid may not be necessary)
@@ -159,20 +149,12 @@ def blockID(threadData):
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
-		logFile = open('log.txt', 'a')
-		logFile.write('{\n')
-		logFile.write('    "type" : "block",\n')
-		logFile.write('    "data" : {\n')
-		logFile.write('        "time" : "' + time.asctime() + '",\n')
-		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-		logFile.write('    }\n')
-		logFile.write('},\n')
-		logFile.close()
-
+		writeLog(threadData, 'block')
 		return True
 	else:
 		print '--- Block failed ---'
-
+		#exit for testing
+		sys.exit(4)
 		return False
 
 # tieba admin user login
@@ -204,6 +186,30 @@ def adminLogin(username, password):
 	else:
 		print "--- Login failed ---"
 		return False
+
+def writeLog(threadData, logType):
+	logFile = open('log.txt', 'a')
+
+	if logType == 'delete':
+		logFile.write('{\n')
+		logFile.write('    "type" : "delete",\n')
+		logFile.write('    "data" : {\n')
+		logFile.write('        "time" : "' + time.asctime() + '",\n')
+		logFile.write('        "title" : "' + threadData['title'].encode('utf-8') + '",\n')
+		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
+		logFile.write('        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n')
+		logFile.write('    }\n')
+		logFile.write('},\n')
+	elif logType == 'block':
+		logFile.write('{\n')
+		logFile.write('    "type" : "block",\n')
+		logFile.write('    "data" : {\n')
+		logFile.write('        "time" : "' + time.asctime() + '",\n')
+		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
+		logFile.write('    }\n')
+		logFile.write('},\n')
+
+	logFile.close()
 
 def judge(threadData):
 	titleGrade   = 0
