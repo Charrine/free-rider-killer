@@ -110,7 +110,8 @@ def deleteThread(threadData):
 	#Decode gzip
 	data = StringIO.StringIO(data)
 	gzipper = gzip.GzipFile(fileobj = data)
-	err_code = json.loads(gzipper.read())['err_code']
+	gzipData = gzipper.read()
+	err_code = json.loads(gzipData)['err_code']
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
@@ -118,6 +119,7 @@ def deleteThread(threadData):
 		return True
 	else:
 		print '--- Delete failed ---'
+		print gzipdata
 		#exit for testing
 		sys.exit(3)
 		return False
@@ -136,7 +138,7 @@ def blockID(threadData):
 		'fid' : '22545',
 		'tbs' : tbs,
 		'ie' : 'utf-8',
-		'user_name[]': threadData['author'].encode('utf-8'),
+		'user_name[]' : threadData['author'].encode('utf-8'),
 		'pids[]' : constantPid, 
 		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	}
@@ -145,7 +147,8 @@ def blockID(threadData):
 	#Decode gzip
 	data = StringIO.StringIO(data)
 	gzipper = gzip.GzipFile(fileobj = data)
-	err_code = json.loads(gzipper.read())['err_code']
+	gzipData = gzipper.read()
+	err_code = json.loads(gzipData)['err_code']
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
@@ -153,6 +156,7 @@ def blockID(threadData):
 		return True
 	else:
 		print '--- Block failed ---'
+		print gzipData
 		#exit for testing
 		sys.exit(4)
 		return False
@@ -235,11 +239,11 @@ def parseArgument():
 	config = {}
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument('choices', choices=['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
-	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest='filename', default='tieba.json')
+	parser.add_argument('choices', choices = ['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
+	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest = 'filename', default = 'tieba.json')
 	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
 	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
-	parser.add_argument('-v','--version', action="version", help = u'显示版本信息并退出', version='0.1')
+	parser.add_argument('-v', '--version', action = "version", help = u'显示版本信息并退出', version = '0.1')
 	args = parser.parse_args()
 
 	if args.choices == 'run':
@@ -332,7 +336,7 @@ def main(argv):
 
 			threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
 			if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-				grade  = judge(threadData)
+				grade = judge(threadData)
 				if grade > 6:
 					# print type(threadData['abstract'])
 					print u'------------------------------------------\n|作者：' + threadData['author']
@@ -345,7 +349,7 @@ def main(argv):
 					deleteCount += 1
 					deleteThread(threadData)
 					#blockID(threadData)
-					time.sleep(5)	
+					time.sleep(5)
 
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
 
