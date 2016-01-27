@@ -1,14 +1,19 @@
 # -*- coding: utf8 -*-
-import urllib2
-import urllib
-import cookielib
 import bs4
-import time
-import sys, getopt
+import cookielib
+import getopt
+import gzip
 import json
 import re
 import StringIO
-import gzip
+import sys
+import time
+import urllib
+import urllib2
+
+
+
+
 
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -61,34 +66,34 @@ keywords=[
 ]
 
 # 'generic' tieba request
-def sendRequest(url, postdata):
+def genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
 
 	request.add_header('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-
 	request.add_header('Accept-Encoding','gzip,deflate,sdch');
-
 	request.add_header('Accept-Language','zh-CN,zh;q=0.8');
-
 	request.add_header('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36');
-
 	request.add_header('Content-Type','application/x-www-form-urlencoded');
-	result = urllib2.urlopen(request)
-	if 'delete' in url:
-		data = result.read()
-		data = StringIO.StringIO(data)
-		gzipper = gzip.GzipFile(fileobj=data)
-		html = gzipper.read()
-		err_code = json.loads(html)['err_code']
-		print err_code
-	result.close()
-	print '--- Done Request ---'
-	return
+
+	data = genericGet(request)
+
+	return data
+
+def genericGet(url):
+	connection = urllib2.urlopen(url)
+	data = connection.read()
+	connection.close()
+
+	return data
+
 
 # delete a post with its tid and pid 
-def deletePost(threadData):
-	print '--- Sending Delete Request ---'
-	tbs = eval(urllib2.urlopen('http://tieba.baidu.com/dc/common/tbs').read())['tbs']
+def deleteThread(threadData):
+	print '--- Deleting ---'
+
+	data = genericGet('http://tieba.baidu.com/dc/common/tbs')
+	tbs = json.loads(data)['tbs']
+
 	postdata = {
 		'commit_fr' : 'pb',
 		'ie' : 'utf-8',
@@ -100,25 +105,42 @@ def deletePost(threadData):
 		'pid' : threadData['pid'], #lou ceng id: e.g.'82457746974'
 		'is_finf' : 'false'
 	}
-	sendRequest('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	logFile = open('log.txt', 'a')
-	logFile.write('{\n')
-	logFile.write('    "type" : "delete",\n')
-	logFile.write('    "data" : {\n')
-	logFile.write('        "time" : "' + time.asctime() + '",\n')
-	logFile.write('        "title" : "' + threadData['title'].encode('utf-8') + '",\n')
-	logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-	logFile.write('        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n')
-	logFile.write('    }\n')
-	logFile.write('},\n')
-	logFile.close()
-	return
+	data = genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
+
+	#Decode gzip
+	data = StringIO.StringIO(data)
+	gzipper = gzip.GzipFile(fileobj = data)
+	err_code = json.loads(gzipper.read())['err_code']
+
+	if err_code == 0:
+		print '--- Delete succeessful ---'
+		logFile = open('log.txt', 'a')
+		logFile.write('{\n')
+		logFile.write('    "type" : "delete",\n')
+		logFile.write('    "data" : {\n')
+		logFile.write('        "time" : "' + time.asctime() + '",\n')
+		logFile.write('        "title" : "' + threadData['title'].encode('utf-8') + '",\n')
+		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
+		logFile.write('        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n')
+		logFile.write('    }\n')
+		logFile.write('},\n')
+		logFile.close()
+
+		return True
+	else:
+		print '--- Delete failed ---'
+
+		return False
 
 # block list of user with their username and pid(pid may not be necessary)
 def blockID(threadData):
-	print '--- Sending Block Request ---'
+	print '--- Blocking ---'
+
 	constantPid = '82459413573'
-	tbs = eval(urllib2.urlopen('http://tieba.baidu.com/dc/common/tbs').read())['tbs']
+
+	data = genericGet('http://tieba.baidu.com/dc/common/tbs')
+	tbs = json.loads(data)['tbs']
+
 	postdata = {
 		'day' : '1',
 		'fid' : '22545',
@@ -128,17 +150,30 @@ def blockID(threadData):
 		'pids[]' : constantPid, 
 		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	}
-	sendRequest('http://tieba.baidu.com/pmc/blockid', postdata)
-	logFile = open('log.txt', 'a')
-	logFile.write('{\n')
-	logFile.write('    "type" : "block",\n')
-	logFile.write('    "data" : {\n')
-	logFile.write('        "time" : "' + time.asctime() + '",\n')
-	logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-	logFile.write('    }\n')
-	logFile.write('},\n')
-	logFile.close()
-	return
+	data = genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
+
+	#Decode gzip
+	data = StringIO.StringIO(data)
+	gzipper = gzip.GzipFile(fileobj = data)
+	err_code = json.loads(gzipper.read())['err_code']
+
+	if err_code == 0:
+		print '--- Block succeessful ---'
+		logFile = open('log.txt', 'a')
+		logFile.write('{\n')
+		logFile.write('    "type" : "block",\n')
+		logFile.write('    "data" : {\n')
+		logFile.write('        "time" : "' + time.asctime() + '",\n')
+		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
+		logFile.write('    }\n')
+		logFile.write('},\n')
+		logFile.close()
+
+		return True
+	else:
+		print '--- Block failed ---'
+
+		return False
 
 # tieba admin user login
 def adminLogin(username, password):
@@ -147,34 +182,27 @@ def adminLogin(username, password):
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 	urllib2.install_opener(opener)
 
-	print '--- Geting Cookie ---'
-	connection = urllib2.urlopen('http://www.baidu.com/')
-	connection.close()
+	#Geting Cookie
+	genericGet('http://www.baidu.com/')
 
-	print '--- Geting Token ---'
-	connection = urllib2.urlopen('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login')
-	token = json.loads(connection.read().replace('\'', '"'))['data']['token']
-	connection.close()
+	#Geting Token
+	data = genericGet('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login')
+	token = json.loads(data.replace('\'', '"'))['data']['token']
 
-	#print '--- Checking Verify Code ---'
-	#connection = urllib2.urlopen('https://passport.baidu.com/v2/api/?logincheck&tpl=pp&apiver=v3&token=' + token + 'username=' + username)
-	#hasVerifyCode = json.loads(connection.read())['data']['codeString']
-	#connection.close()
-
-	print '--- Sending Signin Request ---'
+	print '--- Logining ---'
 	postdata = {
 		'token' : token,
 		'tpl' : 'pp',
 		'username' : username,
 		'password' : password,
 	}
-	sendRequest('https://passport.baidu.com/v2/api/?login', postdata)
+	genericPost('https://passport.baidu.com/v2/api/?login', postdata)
 
 	if 'BDUSS' in str(cj):
-		print " Login succeessful"
+		print "--- Login succeessful ---"
 		return True
 	else:
-		print " Login failed"
+		print "--- Login failed ---"
 		return False
 
 def judge(threadData):
@@ -267,23 +295,16 @@ def main(argv):
 
 	print u'使用用户名：' + config['username']
 
-	# exit(0)
-
-	# adminLogin(config['username'],config['password'])
-
-	isLogined = adminLogin(config['username'],config['password'])
+	isLogined = adminLogin(config['username'], config['password'])
 
 	while(isLogined):
 		deleteCount = 0
-		request = urllib2.Request('http://tieba.baidu.com/f?kw=c语言')
-		connection = urllib2.urlopen(request)
-
+		data = genericGet('http://tieba.baidu.com/f?kw=c语言')
 
 		# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
 		# there will be a error occured when you trying to print threadData['abstract'] to console
 
-		html = connection.read().decode('utf8').encode('gbk','replace').decode('gbk')
-		connection.close()
+		html = data.decode('utf8').encode('gbk','replace').decode('gbk')
 		soup = bs4.BeautifulSoup(html, 'html.parser');
 		threadList = soup.select('.j_thread_list')
 		topThreadNum = len(soup.select('.thread_top'))
@@ -314,12 +335,12 @@ def main(argv):
 					print u'\n|得分：%f' % grade
 					print u'\n-------------------------------------------\n\n'
 				# if any(word in threadData['title'] for word in keywords) or u'求' in threadData['title'][0] or ((threadData['abstract'] != None) and u'求' in threadData['abstract'][0]) \
-				 # or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
+				# or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
 					deleteCount += 1
-					deletePost(threadData)
+					deleteThread(threadData)
 					#blockID(threadData)
 					time.sleep(5)	
-	
+
 		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
 
 		if deleteCount == 0:
