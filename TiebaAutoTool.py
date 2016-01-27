@@ -7,6 +7,8 @@ import time
 import sys, getopt
 import json
 import re
+import StringIO
+import gzip
 
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -72,6 +74,13 @@ def sendRequest(url, postdata):
 
 	request.add_header('Content-Type','application/x-www-form-urlencoded');
 	result = urllib2.urlopen(request)
+	if 'delete' in url:
+		data = result.read()
+		data = StringIO.StringIO(data)
+		gzipper = gzip.GzipFile(fileobj=data)
+		html = gzipper.read()
+		err_code = json.loads(html)['err_code']
+		print err_code
 	result.close()
 	print '--- Done Request ---'
 	return
