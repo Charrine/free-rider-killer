@@ -1,25 +1,23 @@
-require 'net/http'
+require 'rubygems'
+require 'nokogiri'
+require 'open-uri'
 
-uri = URI('https://passport.baidu.com/v2/api/?getapi&class=login&tpl=mn&tangram=false')
-response = Net::HTTP.get_response(uri)
-cookie = response['set-cookie']
-puts cookie
+file = open("temp", "w")
+pageNum = 100
+pageNum.times do |i|
+  page = Nokogiri::HTML(open("http://tieba.baidu.com/f?kw=c%E8%AF%AD%E8%A8%80&ie=utf-8&pn=#{i * 50}"))
+  thread = page.css(".j_thread_list")
 
+  thread.each do |thread|
+    title = thread.css("a.j_th_tit").text
+    abstract = thread.css("div.threadlist_abs").text
+    if abstract == ''
+      abstract = 'none'
+    end
+    puts title.encoding
+    file.write("#{title}\n")
+    file.write("#{abstract}\n")
+  end
 
-
-#puts login_result.code
-#puts login_result.message
-#puts login_result.class.name
-#puts login_result.body
-
-
-
-
-#Get method
-#uri = URI('http://tieba.baidu.com/f?kw=c%D3%EF%D1%D4&fr=index')
-#puts Net::HTTP.get(uri)
-
-#Post method
-#uri = URI('http://localhost/test.php')
-#res = Net::HTTP.post_form(uri, 'p' => 1)
-#puts res.body
+  puts "Page num: #{i + 1}"
+end
