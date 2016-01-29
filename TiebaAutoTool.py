@@ -18,52 +18,7 @@ import urllib2
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-keywords=[
-	[u'求',		40],
-	[u'写c',	50],
-	[u'求助',	100],
-	[u'新人',	50],
-	[u'小白',	50],
-	[u'新手',	40],
-	[u'出错了',	50],
-	[u'求资源',	200],
-	[u'题',		50],
-	[u'大神', 	100],
-	[u'求大神',	200],
-	[u'求高手',	100],
-	[u'请大神',	100],
-	[u'帮忙',	50],
-	[u'考试',	40],
-	[u'作业',	40],
-	[u'谁来帮我',400],
-	[u'？？',	100],
-	[u'！！！',	100],
-	[u'为什么',	50],
-	[u'帮我',	100],
-	[u'二级',	100],
-	[u'计算机二级', 500],
-	[u'跪求',	500],
-	[u'在线等',	500],
-	[u'救急',	15],
-	[u'题库',	200],
-	[u'不会',	30],
-	[u'2级',	100],
-	[u'安装包',	100],
-	[u'include', 100],
-	[u'怎么改', 100],
-	[u'助攻',	100],
-	[u'挂科', 	50],
-	[u'资料',	50],
-	[u'谁有',	200],
-	[u'win10',	100],
-	[u'win8',	100],
-	[u'vc', 	200],
-	[u'VC',		200],
-	[u'dev',	-200],
-	[u'入门',	50],
-	[u'tc',	50],
-	[u'答案',	50]
-]
+keywords = []
 
 # 'generic' tieba request
 def genericPost(url, postdata):
@@ -302,6 +257,16 @@ def main():
 	if config['type'] == 'json':
 		getConfigrations(config)
 
+	try:
+		global keywords
+		f = file('keywords.conf')
+		keywords = json.load(f)
+	except IOError, e:
+		print u'无法打开 keywords 配置文件，文件可能不存在'
+		sys.exit(1)
+	finally:
+		f.close()
+
 	print u'使用用户名：' + config['username']
 
 	isLogined = adminLogin(config['username'], config['password'])
@@ -350,7 +315,7 @@ def main():
 			print e
 			logFile = open('error.log', 'a')
 			logFile.write(time.asctime() + '\n')
-			logFile.write(e + '\n\n')
+			logFile.write(str(e) + '\n\n')
 			logFile.close()
 		else:
 			if deleteCount != 0:
