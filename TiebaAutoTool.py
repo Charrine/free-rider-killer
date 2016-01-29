@@ -19,6 +19,7 @@ reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
 keywords = []
+tieba = {}
 
 # 'generic' tieba request
 def genericPost(url, postdata):
@@ -53,8 +54,8 @@ def deleteThread(threadData):
 		'commit_fr' : 'pb',
 		'ie' : 'utf-8',
 		'tbs' : tbs,
-		'kw' : 'c%E8%AF%AD%E8%A8%80',
-		'fid' : '22545',
+		'kw' : tieba['kw'],
+		'fid' : tieba['fid'],
 		'tid' : threadData['tid'], #tie zi id: e.g.'4304106830'
 		'is_vipdel' : '0',
 		'pid' : threadData['pid'], #lou ceng id: e.g.'82457746974'
@@ -86,7 +87,7 @@ def blockID(threadData):
 
 	postdata = {
 		'day' : '1',
-		'fid' : '22545',
+		'fid' : tieba['kw'],
 		'tbs' : tbs,
 		'ie' : 'utf-8',
 		'user_name[]' : threadData['author'].encode('utf-8'),
@@ -266,13 +267,23 @@ def main():
 	finally:
 		f.close()
 
+	try:
+		global tieba
+		f = file('tieba.conf')
+		tieba = json.load(f)
+	except IOError, e:
+		print u'无法打开 tieba 配置文件，文件可能不存在'
+		sys.exit(1)
+	finally:
+		f.close()
+
 	print u'使用用户名：' + config['username']
 
 	isLogined = adminLogin(config['username'], config['password'])
 	deleteCount = 0
 	while(isLogined):
 		try:
-			data = genericGet('http://tieba.baidu.com/f?kw=c语言')
+			data = genericGet('http://tieba.baidu.com/f?kw=' + tieba['kw'])
 
 			# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
 			# there will be a error occured when you trying to print threadData['abstract'] to console
