@@ -193,7 +193,7 @@ def decodeGzip(data):
 	return gzipData
 
 def writeLog(threadData, logType):
-	logFile = open('log.txt', 'a')
+	logFile = open('history.log', 'a')
 
 	if logType == 'delete':
 		logFile.write('{\n')
@@ -272,7 +272,6 @@ def configure():
 
 def getConfigrations(config):
 	print u'使用配置文件：' + config['filename'] + '...\n'
-	
 
 	try:
 		f = file(config['filename'])
@@ -294,8 +293,7 @@ def getConfigrations(config):
 
 
 
-def main(argv):
-	grade = 0
+def main():
 	config = parseArgument()
 	if config['type'] == 'config':
 		configure()
@@ -307,58 +305,61 @@ def main(argv):
 	print u'使用用户名：' + config['username']
 
 	isLogined = adminLogin(config['username'], config['password'])
-
+	deleteCount = 0
 	while(isLogined):
-		deleteCount = 0
-		data = genericGet('http://tieba.baidu.com/f?kw=c语言')
+		try:
+			data = genericGet('http://tieba.baidu.com/f?kw=c语言')
 
-		# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
-		# there will be a error occured when you trying to print threadData['abstract'] to console
+			# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
+			# there will be a error occured when you trying to print threadData['abstract'] to console
 
-		html = data.decode('utf8').encode('gbk','replace').decode('gbk')
-		soup = bs4.BeautifulSoup(html, 'html.parser');
-		threadList = soup.select('.j_thread_list')
-		topThreadNum = len(soup.select('.thread_top'))
+			html = data.decode('utf8').encode('gbk','replace').decode('gbk')
+			soup = bs4.BeautifulSoup(html, 'html.parser');
+			threadList = soup.select('.j_thread_list')
+			topThreadNum = len(soup.select('.thread_top'))
 
-		for thread in threadList[topThreadNum:]:
-			dataField = json.loads(thread['data-field'])
-			threadData = {
-				'title' : thread.select('a.j_th_tit')[0].string,
-				'author' : dataField['author_name'],
-				'abstract' : thread.select('div.threadlist_abs')[0].string,
-				'tid' : dataField['id'],
-				'pid' : dataField['first_post_id'],
-				'goodThread' : dataField['is_good'],
-				'topThread' : dataField['is_top'],
-				'replyNum' : dataField['reply_num']
-			}
+			for thread in threadList[topThreadNum:]:
+				dataField = json.loads(thread['data-field'])
+				threadData = {
+					'title' : thread.select('a.j_th_tit')[0].string,
+					'author' : dataField['author_name'],
+					'abstract' : thread.select('div.threadlist_abs')[0].string,
+					'tid' : dataField['id'],
+					'pid' : dataField['first_post_id'],
+					'goodThread' : dataField['is_good'],
+					'topThread' : dataField['is_top'],
+					'replyNum' : dataField['reply_num']
+				}
 
-			#threadData['abstract'] maybe None, and this may cause a lot of problems!!!
+				#threadData['abstract'] maybe None, and this may cause a lot of problems!!!
+				threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
+				if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
+					grade = judge(threadData)
+					if grade > 6:
+						print u'------------------------------------------\n|作者：' + threadData['author']
+						print u'\n|帖子标题：' + threadData['title'] 
+						print u'\n|帖子预览：' + threadData['abstract']
+						print u'\n|得分：%f' % grade
+						print u'\n-------------------------------------------\n\n'
 
-			threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
-			if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-				grade = judge(threadData)
-				if grade > 6:
-					# print type(threadData['abstract'])
-					print u'------------------------------------------\n|作者：' + threadData['author']
-					print u'\n|帖子标题：' + threadData['title'] 
-					print u'\n|帖子预览：' + threadData['abstract']
-					print u'\n|得分：%f' % grade
-					print u'\n-------------------------------------------\n\n'
-				# if any(word in threadData['title'] for word in keywords) or u'求' in threadData['title'][0] or ((threadData['abstract'] != None) and u'求' in threadData['abstract'][0]) \
-				# or ((threadData['abstract'] != None) and any(word in threadData['abstract'] for word in keywords)):
-					deleteCount += 1
-					deleteThread(threadData)
-					#blockID(threadData)
-					time.sleep(5)
-
-		print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
-
-		if deleteCount == 0:
+						deleteThread(threadData)
+						#blockID(threadData)
+						deleteCount += 1
+						time.sleep(5)
+		except Exception, e:
+			print e
+			logFile = open('error.log', 'a')
+			logFile.write(time.asctime() + '\n')
+			logFile.write(e + '\n\n')
+			logFile.close()
+		else:
+			if deleteCount != 0:
+				print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
 			print 'Waiting for more post...'
 			time.sleep(60)
+			deleteCount = 0
 
 	return
 
 if __name__ == '__main__':
-	main(sys.argv[1:])
+	main()
