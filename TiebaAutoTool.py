@@ -107,11 +107,7 @@ def deleteThread(threadData):
 	}
 	data = genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
 
-	#Decode gzip
-	data = StringIO.StringIO(data)
-	gzipper = gzip.GzipFile(fileobj = data)
-	gzipData = gzipper.read()
-	err_code = json.loads(gzipData)['err_code']
+	err_code = json.loads(decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
@@ -144,11 +140,7 @@ def blockID(threadData):
 	}
 	data = genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
 
-	#Decode gzip
-	data = StringIO.StringIO(data)
-	gzipper = gzip.GzipFile(fileobj = data)
-	gzipData = gzipper.read()
-	err_code = json.loads(gzipData)['err_code']
+	err_code = json.loads(decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
@@ -190,6 +182,15 @@ def adminLogin(username, password):
 	else:
 		print "--- Login failed ---"
 		return False
+
+def decodeGzip(data):
+	fileObj = StringIO.StringIO(data)
+	gzipObj = gzip.GzipFile(fileobj = fileObj)
+	gzipData = gzipObj.read()
+	fileObj.close()
+	gzipObj.close()
+
+	return gzipData
 
 def writeLog(threadData, logType):
 	logFile = open('log.txt', 'a')
