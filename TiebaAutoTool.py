@@ -196,7 +196,7 @@ def parseArgument():
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument('choices', choices = ['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
-	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest = 'filename', default = 'tieba.json')
+	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest = 'filename', default = 'user.conf')
 	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
 	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
 	parser.add_argument('-v', '--version', action = "version", help = u'显示版本信息并退出', version = '0.1')
@@ -253,8 +253,7 @@ def main():
 	if config['type'] == 'config':
 		configure()
 		sys.exit(0)
-
-	if config['type'] == 'json':
+	elif config['type'] == 'json':
 		getConfigrations(config)
 
 	try:
