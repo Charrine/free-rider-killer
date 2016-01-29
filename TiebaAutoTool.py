@@ -106,18 +106,18 @@ def deleteThread(threadData):
 		'is_finf' : 'false'
 	}
 	data = genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-
 	err_code = json.loads(decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
-		writeLog(threadData, 'delete')
+		recordHistory(threadData, 'delete')
 		return True
 	else:
 		print '--- Delete failed ---'
-		print gzipdata
-		#exit for testing
-		sys.exit(3)
+		logFile = open('error.log', 'a')
+		logFile.write(time.asctime() + '\n')
+		logFile.write('Delete failed error code' + err_code + '\n\n')
+		logFile.close()
 		return False
 
 # block list of user with their username and pid(pid may not be necessary)
@@ -139,18 +139,18 @@ def blockID(threadData):
 		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	}
 	data = genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
-
 	err_code = json.loads(decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
-		writeLog(threadData, 'block')
+		recordHistory(threadData, 'block')
 		return True
 	else:
 		print '--- Block failed ---'
-		print gzipData
-		#exit for testing
-		sys.exit(4)
+		logFile = open('error.log', 'a')
+		logFile.write(time.asctime() + '\n')
+		logFile.write('Block failed error code' + err_code + '\n\n')
+		logFile.close()
 		return False
 
 # tieba admin user login
@@ -192,7 +192,7 @@ def decodeGzip(data):
 
 	return gzipData
 
-def writeLog(threadData, logType):
+def recordHistory(threadData, logType):
 	logFile = open('history.log', 'a')
 
 	if logType == 'delete':
