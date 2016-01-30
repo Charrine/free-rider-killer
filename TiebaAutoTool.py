@@ -36,7 +36,7 @@ def genericPost(url, postdata):
 	return data
 
 def genericGet(url):
-	connection = urllib2.urlopen(url)
+	connection = urllib2.urlopen(url, timeout = 1)
 	data = connection.read()
 	connection.close()
 
@@ -304,6 +304,7 @@ def main():
 			logFile.write(time.asctime() + '\n')
 			logFile.write(str(e) + '\n\n')
 			logFile.close()
+			time.sleep(10)
 		else:
 			if deleteCount != 0:
 				print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
