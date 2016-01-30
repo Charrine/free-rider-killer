@@ -111,7 +111,7 @@ def blockID(threadData):
 
 # tieba admin user login
 def adminLogin(username, password):
-	print '--- Initializing ---'
+
 	cj = cookielib.CookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 	urllib2.install_opener(opener)
@@ -197,11 +197,14 @@ def parseArgument():
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument('choices', choices = ['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
-	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为tieba.json', dest = 'filename', default = 'user.conf')
+	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为default.json', dest = 'filename', default = 'default.json')
 	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
 	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
-	parser.add_argument('-v', '--version', action = "version", help = u'显示版本信息并退出', version = '0.1')
+	parser.add_argument('-d', '--debug'   , help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
+	parser.add_argument('-v', '--version' , help = u'显示版本信息并退出', action = "version", version = '0.1')
 	args = parser.parse_args()
+
+	config['debug'] = args.debug
 
 	if args.choices == 'run':
 		if args.username != None:
@@ -239,9 +242,11 @@ def getConfigrations(config):
 	jsonobj = json.load(f)
 	f.close()
 
-	if 'username' in jsonobj and 'password' in jsonobj:
+	if 'username' in jsonobj and 'password' in jsonobj and 'name' in jsonobj and 'fid' in jsonobj:
 		config['username'] = jsonobj['username']
 		config['password'] = jsonobj['password']
+		config['name']     = jsonobj['name']
+		config['fid']	   = jsonobj['fid']
 
 	else:
 		print u'无效的配置文件，请使用TiebaAutoTool.py config来生成配置文件'
@@ -250,36 +255,7 @@ def getConfigrations(config):
 
 
 def main():
-	config = parseArgument()
-	if config['type'] == 'config':
-		configure()
-		sys.exit(0)
-	elif config['type'] == 'json':
-		getConfigrations(config)
 
-	try:
-		global keywords
-		f = file('keywords.conf')
-		keywords = json.load(f)
-	except IOError, e:
-		print u'无法打开 keywords 配置文件，文件可能不存在'
-		sys.exit(1)
-	finally:
-		f.close()
-
-	try:
-		global tieba
-		f = file('tieba.conf')
-		tieba = json.load(f)
-	except IOError, e:
-		print u'无法打开 tieba 配置文件，文件可能不存在'
-		sys.exit(1)
-	finally:
-		f.close()
-
-	print u'使用用户名：' + config['username']
-
-	isLogined = adminLogin(config['username'], config['password'])
 	deleteCount = 0
 	while(isLogined):
 		try:
@@ -317,7 +293,8 @@ def main():
 						print u'\n|得分：%f' % grade
 						print u'\n-------------------------------------------\n\n'
 
-						deleteThread(threadData)
+						if config['debug'] == False:
+							deleteThread(threadData)
 						#blockID(threadData)
 						deleteCount += 1
 						time.sleep(5)
@@ -336,5 +313,44 @@ def main():
 
 	return
 
+
+# do some initialization work
+def init():
+	print '--- Initializing ---'
+
+	global config 
+	config = parseArgument()
+
+	if config['type'] == 'config':
+		configure()
+		sys.exit(0)
+	elif config['type'] == 'json':
+		getConfigrations(config)
+
+
+	try:
+		global keywords
+		f = file('keywords.conf')
+		keywords = json.load(f)
+	except IOError, e:
+		print u'无法打开 keywords 配置文件，文件可能不存在'
+		sys.exit(1)
+	finally:
+		f.close()
+
+
+	print u'使用用户名：' + config['username']
+
+	if config['debug']:
+		print u'调试模式已开启！'
+
+	isLogined = adminLogin(config['username'], config['password'])
+
+	if isLogined == False:
+		sys.exit(1)
+
+	print "--- Initialize succeessful ---"
+
 if __name__ == '__main__':
+	init()
 	main()
