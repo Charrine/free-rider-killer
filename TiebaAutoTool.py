@@ -12,14 +12,10 @@ import urllib
 import urllib2
 
 
-
-
-
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
 keywords = []
-tieba = {}
 
 # 'generic' tieba request
 def genericPost(url, postdata):
@@ -54,8 +50,8 @@ def deleteThread(threadData):
 		'commit_fr' : 'pb',
 		'ie' : 'utf-8',
 		'tbs' : tbs,
-		'kw' : tieba['kw'],
-		'fid' : tieba['fid'],
+		'kw' : config['name'],
+		'fid' : config['fid'],
 		'tid' : threadData['tid'], #tie zi id: e.g.'4304106830'
 		'is_vipdel' : '0',
 		'pid' : threadData['pid'], #lou ceng id: e.g.'82457746974'
@@ -87,7 +83,7 @@ def blockID(threadData):
 
 	postdata = {
 		'day' : '1',
-		'fid' : tieba['kw'],
+		'fid' : config['fid'],     #??????? 
 		'tbs' : tbs,
 		'ie' : 'utf-8',
 		'user_name[]' : threadData['author'].encode('utf-8'),
@@ -191,15 +187,17 @@ def judge(threadData):
 
 	return grade
 
-def parseArgument():
+def parseArgument(config):
 	import argparse
-	config = {}
+	
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument('choices', choices = ['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
 	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为default.json', dest = 'filename', default = 'default.json')
 	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
 	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
+	parser.add_argument('-n'              , help = u'贴吧名，不包含‘吧’', default = u'c语言')
+	# parser.add_argument('--fid',          , help = u'fid', )
 	parser.add_argument('-d', '--debug'   , help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v', '--version' , help = u'显示版本信息并退出', action = "version", version = '0.1')
 	args = parser.parse_args()
@@ -208,7 +206,7 @@ def parseArgument():
 
 	if args.choices == 'run':
 		if args.username != None:
-			config['username'] = args.username
+			config['username'] = args.username.decode(config['stdincoding'])
 			if args.password == None:
 				print u'错误：未指定密码，-u选项必须和-p选项连用\n'
 				parser.print_help()
@@ -225,7 +223,66 @@ def parseArgument():
 	return config
 
 def configure():
-	print u'请输入配置文件名'
+	import os
+	import getpass
+
+	isLogined = False
+
+	print u'请输入配置文件的文件名按回车使用默认文件:',
+	config['filename'] = raw_input()
+	if config['filename'] == '':
+		print u'使用默认配置文件default.json'
+		config['filename'] = 'default.json'
+	print u'-----将使用:%s -----' %(config['filename'])
+	if os.path.exists(config['filename']):
+		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
+		inputs = raw_input()
+		if inputs != 'y' and inputs != 'Y':
+			print u'已取消'
+			sys.exit(0)	
+
+	while isLogined == False:
+		print u'请输入用户名:',
+		config['username'] = raw_input()
+
+		print u'请输入密码（无回显）',
+
+		config['password'] = getpass.getpass(':')
+
+		print u'-----登陆测试-----'
+		if config['debug'] == False:
+			isLogined = adminLogin(config['username'], config['password'])
+			if isLogined == False:
+				print u'登陆失败...按q可退出,回车继续尝试'
+				inputs = raw_input()
+				if inputs == 'q' or inputs == 'Q':
+					print u'程序退出，未作出任何更改...'
+					sys.exit(0)
+			else:
+				print u'-----登陆成功！-----'
+		else:
+			isLogined = True
+			print u'\n因调试而跳过登陆验证\n'
+
+	print u'请输入贴吧名称（不带‘吧’，如希望管理c语言吧，则输入‘c语言’）'
+	config['name'] = raw_input()
+
+
+
+	print u'请输入fid：',
+	config['fid'] = raw_input()
+
+	config['name']     = config['name'].decode(config['stdincoding'])
+	config['username'] = config['username'].decode(config['stdincoding'])
+	with open(config['filename'], "w") as configfile:
+		configfile.write('{\n')
+		configfile.write('    "username":"' + config['username'].encode('utf8') + '",\n')
+		configfile.write('    "password":"' + config['password'] + '",\n')
+		configfile.write('    "name":"' + config['name'].encode('utf8') + '",\n')
+		configfile.write('    "fid":' + config['fid'] + '\n')
+		configfile.write('}')
+	print u'-----写入成功-----'
+	print u'请使用python TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
 	#Todo 根据用户的输入生成配置文件
 
 
@@ -257,9 +314,9 @@ def getConfigrations(config):
 def main():
 
 	deleteCount = 0
-	while(isLogined):
+	while(1):
 		try:
-			data = genericGet('http://tieba.baidu.com/f?kw=' + tieba['kw'])
+			data = genericGet('http://tieba.baidu.com/f?kw=' + config['name'])
 
 			# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
 			# there will be a error occured when you trying to print threadData['abstract'] to console
@@ -317,10 +374,23 @@ def main():
 
 # do some initialization work
 def init():
+
 	print '--- Initializing ---'
 
 	global config 
-	config = parseArgument()
+	config = {}
+	
+
+	if sys.stdin.encoding == 'cp936':
+		config['stdincoding'] = 'gbk'
+	else:
+		config['stdincoding'] = 'utf8'
+
+	parseArgument(config)
+	if config['debug']:
+		print u'调试模式已开启！'
+
+	
 
 	if config['type'] == 'config':
 		configure()
@@ -342,8 +412,6 @@ def init():
 
 	print u'使用用户名：' + config['username']
 
-	if config['debug']:
-		print u'调试模式已开启！'
 
 	isLogined = adminLogin(config['username'], config['password'])
 
@@ -353,5 +421,6 @@ def init():
 	print "--- Initialize succeessful ---"
 
 if __name__ == '__main__':
+
 	init()
 	main()
