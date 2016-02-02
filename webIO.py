@@ -11,7 +11,7 @@ import urllib2
 #============================================================
 # Function Name: adminLogin
 # Parameter:
-# config = {
+# user = {
 #     'username' : 'username',
 #     'password' : 'password'
 # }
@@ -19,29 +19,29 @@ import urllib2
 #------------------------------------------------------------
 # Function Name: deleteThread
 # Parameter:
-# configData = {
-#     'kw' : 'c语言',
-#     'fid' : 22545
-# }
 # threadData = {
 #     'tid' : 4304106830,
 #     'pid' : 82457746974
+# }
+# forum = {
+#     'kw' : 'c语言',
+#     'fid' : 22545
 # }
 # Return: Boolean
 #------------------------------------------------------------
 # Function Name: blockID
 # Parameter:
-# configData = {
-#     'fid' : 22545
-# }
 # threadData = {
 #     'author' : 'author'
+# }
+# forum = {
+#     'fid' : 22545
 # }
 # Return: Boolean
 #------------------------------------------------------------
 # Function Name: getThreadDataList
 # Parameter:
-# configData = {
+# forum = {
 #     'kw' : 'c语言'
 # }
 # Return: threadDataList
@@ -52,33 +52,37 @@ import urllib2
 # global variable list:
 # _cj
 
-def adminLogin(config):
-	_initialization()
-
-	print '--- Logining ---'
-	postdata = {
-		'token' : _getToken(),
-		'tpl' : 'pp',
-		'username' : config['username'],
-		'password' : config['password'],
-	}
-	_genericPost('https://passport.baidu.com/v2/api/?login', postdata)
-
+def adminLogin(user):
 	if isLogined():
 		print "--- Login succeessful ---"
 		return True
 	else:
-		print "--- Login failed ---"
-		return False
+		print '--- Logining ---'
+		postdata = {
+			'token' : _getToken(),
+			'tpl' : 'pp',
+			'username' : user['username'],
+			'password' : user['password'],
+		}
+		_genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+
+		if isLogined():
+			print "--- Login succeessful ---"
+			return True
+		else:
+			print "--- Login failed ---"
+			return False
+
+	return
 
 
-def deleteThread(threadData, configData):
+def deleteThread(threadData, forum):
 	print '--- Deleting ---'
 
 	postdata = {
 		'tbs' : _getTbs(),
-		'kw' : configData['kw'],
-		'fid' : configData['fid'],
+		'kw' : forum['kw'],
+		'fid' : forum['fid'],
 		'tid' : threadData['tid'],
 		'pid' : threadData['pid'],
 		'commit_fr' : 'pb',
@@ -102,13 +106,13 @@ def deleteThread(threadData, configData):
 		logFile.close()
 		return False
 
-def blockID(threadData, configData):
+def blockID(threadData, forum):
 	print '--- Blocking ---'
 
 	constantPid = '82459413573'
 	postdata = {
 		'tbs' : _getTbs(),
-		'fid' : configData['fid'],
+		'fid' : forum['fid'],
 		'user_name[]' : threadData['author'],
 		'pids[]' : constantPid, 
 		'day' : '1',
@@ -130,8 +134,8 @@ def blockID(threadData, configData):
 		logFile.close()
 		return False
 
-def getThreadDataList(configData):
-	data = _genericGet('http://tieba.baidu.com/f?kw=' + configData['kw'])
+def getThreadDataList(forum):
+	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
 
 	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
 	# there will be a error occured when you trying to print threadData['abstract'] to console
@@ -166,11 +170,9 @@ def isLogined():
 	else:
 		return False
 
-#Local function
-
-def _initialization():
-	_initializeCookieJar()
-
+def webIOInitialization():
+	global _cj
+	_cj = cookielib.MozillaCookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
 	urllib2.install_opener(opener)
 
@@ -179,11 +181,17 @@ def _initialization():
 
 	return
 
-def _initializeCookieJar():
-	global _cj
-	_cj = cookielib.CookieJar()
+def loadCookie(loginType):
+	_cj.load(loginType['filename'], True)
 
 	return
+
+def saveCookie(user, filename):
+	_cj.save(filename, True)
+
+	return
+
+#Local function
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))

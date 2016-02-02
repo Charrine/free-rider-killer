@@ -38,8 +38,8 @@ def parseArgument():
 	#TODO: how to set default for choices
 	parser.add_argument('workingType', choices = ['run', 'config-user', 'config-cookie'], help = u'使用 "run" 来运行删帖机，使用 "config-user" 来生成一个用户配置文件，使用 "config-cookie" 来生成一个 cookie 配置文件', default = u'run')
 	parser.add_argument('-l', '--login-type',     help = u'使用 argument 来登陆，使用 json 来登陆，使用 cookie 来登陆', dest = 'loginType', default = u'json')#choices = ['argument', 'json', 'cookie'],
-	parser.add_argument('-cp', '--user-path',     help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
-	parser.add_argument('-kp', '--cookie-path',   help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
+	parser.add_argument('-c', '--user-path',     help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
+	parser.add_argument('-k', '--cookie-path',   help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
 	parser.add_argument('-u',  '--username',      help = u'指定登陆的用户名')
 	parser.add_argument('-p',  '--password',      help = u'密码，必须和上一项结合使用')
 	#parser.add_argument('-f',  '--forum'          help = u'贴吧名，不包含‘吧’', default = u'c语言')
@@ -87,27 +87,27 @@ def parseArgument():
 def configureUser():
 	import getpass
 
-	isLogined = False
-
-	print u'请输入配置文件的文件名按回车使用默认文件:',
-	config['loginType']['filename'] = raw_input()
-	if config['loginType']['filename'] == '':
+	print u'请输入配置文件的文件名(按回车使用默认文件):',
+	filename = raw_input()
+	if filename == '':
+		filename = 'default.json'
 		print u'使用默认配置文件default.json'
-		config['filename'] = 'default.json'
-	print u'-----将使用:%s -----' %(config['loginType']['filename'])
-	if os.path.exists(config['loginType']['filename']):
+	else:
+		print u'-----将使用:%s -----' %(filename)
+
+	if os.path.exists(filename):
 		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
 		inputs = raw_input()
 		if inputs != 'y' and inputs != 'Y':
 			print u'已取消'
-			sys.exit(0)	
+			sys.exit(0)
 
+	isLogined = False
 	while isLogined == False:
 		print u'请输入用户名:',
 		config['user']['username'] = raw_input()
 
 		print u'请输入密码（无回显）',
-
 		config['user']['password'] = getpass.getpass(':')
 
 		print u'-----登陆测试-----'
@@ -126,15 +126,13 @@ def configureUser():
 			print u'\n因调试而跳过登陆验证\n'
 
 	config['user']['username'] = config['user']['username'].decode(config['stdincoding'])
-	with open(config['filename'], "w") as configfile:
+	with open(filename, "w") as configfile:
 		configfile.write('{\n')
-		configfile.write('    "username":"' + config['user']['username'].encode('utf8') + '",\n')
-		configfile.write('    "password":"' + config['user']['password'] + '",\n')
+		configfile.write('    "username" : "' + config['user']['username'].encode('utf8') + '",\n')
+		configfile.write('    "password" : "' + config['user']['password'] + '",\n')
 		configfile.write('}')
 	print u'-----写入成功-----'
-	#print u'请使用python TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
-	#Todo 根据用户的输入生成配置文件
-
+	print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
 
 def getUserConfigration():
 	print u'使用配置文件：' + config['loginType']['filename'] + '...\n'
@@ -163,16 +161,60 @@ def getUserConfigration():
 	return
 
 def getCookie():
-	pass
+	loadCookie(config['loginType'])
+
+	return
 
 def configureCookie():
-	pass
+	import getpass
+
+	print u'请输入 cookie 文件的文件名(按回车使用默认文件):',
+	filename = raw_input()
+	if filename == '':
+		filename = 'cookie.txt'
+		print u'使用默认配置文件cookie.txt'
+	else:
+		print u'-----将使用:%s -----' %(filename)
+
+	if os.path.exists(filename):
+		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
+		inputs = raw_input()
+		if inputs != 'y' and inputs != 'Y':
+			print u'已取消'
+			sys.exit(0)
+
+	isLogined = False
+	while isLogined == False:
+		print u'请输入用户名:',
+		config['user']['username'] = raw_input()
+
+		print u'请输入密码（无回显）',
+		config['user']['password'] = getpass.getpass(':')
+
+		print u'-----登陆测试-----'
+		if config['workingMode'] != 'debug':
+			isLogined = adminLogin(config['user'])
+			if isLogined == False:
+				print u'登陆失败...按q可退出,回车继续尝试'
+				inputs = raw_input()
+				if inputs == 'q' or inputs == 'Q':
+					print u'程序退出，未作出任何更改...'
+					sys.exit(0)
+			else:
+				print u'-----登陆成功！-----'
+		else:
+			isLogined = True
+			print u'\n因调试而跳过登陆验证\n'
+
+	saveCookie(config['user'], filename)
+
+	return
 
 def autoDelete():
 	deleteCount = 0
 	while(True):
 		try:
-			threadDataList = getThreadDataList(config)
+			threadDataList = getThreadDataList(config['forum'])
 
 			for threadData in threadDataList:
 				if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
@@ -184,7 +226,7 @@ def autoDelete():
 						print u'\n|得分：%f' % grade
 						print u'\n-------------------------------------------\n\n'
 
-						if config['debug'] == False:
+						if config['workingMode'] != 'debug':
 							deleteThread(threadData, config['forum'])
 						#blockID(threadData, config['forum'])
 						deleteCount += 1
@@ -206,7 +248,6 @@ def autoDelete():
 	return
 
 def main():
-	print config
 	if config['workingType'] == 'configUser':
 		configureUser()
 	elif config['workingType'] == 'configCookie':
@@ -262,9 +303,8 @@ def init():
 	else:
 		config['stdincoding'] = 'utf8'
 
+	webIOInitialization()
 	parseArgument()
-
-	#webIOInitialization()
 
 	return
 
