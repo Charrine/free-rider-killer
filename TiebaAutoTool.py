@@ -61,15 +61,13 @@ def parseArgument():
 		elif args.loginType == 'json':
 			config['loginType']['type'] = 'json'
 			config['loginType']['filename'] = args.userFilename
-			getUserConfigration()
 		elif args.loginType == 'cookie':
 			config['loginType']['type'] = 'cookie'
 			config['loginType']['filename'] = args.cookieFilename
-			getCookie()
 		else:
-				print u'错误：错误参数\n'
-				parser.print_help()
-				sys.exit(1)
+			print u'错误：错误参数\n'
+			parser.print_help()
+			sys.exit(1)
 	elif args.workingType == 'config-user':
 		config['workingType'] = 'configUser'
 	elif args.workingType == 'config-cookie':
@@ -134,37 +132,6 @@ def configureUser():
 	print u'-----写入成功-----'
 	print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
 
-def getUserConfigration():
-	print u'使用配置文件：' + config['loginType']['filename'] + '...\n'
-
-	try:
-		f = file(config['loginType']['filename'])
-	except IOError, e:
-		print u'无法打开配置文件，文件可能不存在'
-		sys.exit(1)
-	else:
-		try:
-			jsonObj = json.load(f)
-		except Exception, e:
-			print u'无法解析配置文件，文件格式可能不对'
-			sys.exit(1)
-		else:
-			if 'username' in jsonObj and 'password' in jsonObj:
-				config['user']['username'] = jsonObj['username']
-				config['user']['password'] = jsonObj['password']
-			else:
-				print u'无效的配置文件，请使用 TiebaAutoTool.py user-config 来生成配置文件'
-				sys.exit(1)
-	finally:
-		f.close()
-
-	return
-
-def getCookie():
-	loadCookie(config['loginType'])
-
-	return
-
 def configureCookie():
 	import getpass
 
@@ -206,7 +173,7 @@ def configureCookie():
 			isLogined = True
 			print u'\n因调试而跳过登陆验证\n'
 
-	saveCookie(config['user'], filename)
+	saveCookie(filename)
 
 	return
 
@@ -253,21 +220,6 @@ def main():
 	elif config['workingType'] == 'configCookie':
 		configureCookie()
 	elif config['workingType'] == 'autoDelete':
-		try:
-			f = file('keywords.conf')
-		except IOError, e:
-			print u'无法打开 keywords 配置文件，文件可能不存在'
-			sys.exit(1)
-		else:
-			try:
-				global keywords
-				keywords = json.load(f)
-			except Exception, e:
-				print u'无法解析配置文件，文件格式可能不对'
-				sys.exit(1)
-		finally:
-			f.close()
-
 		print u'使用用户名：' + config['user']['username']
 		isLogined = adminLogin(config['user'])
 		if isLogined:
@@ -303,8 +255,65 @@ def init():
 	else:
 		config['stdincoding'] = 'utf8'
 
-	webIOInitialization()
 	parseArgument()
+
+	print '--- Initializing ---'
+	webIOInitialization()
+	if config['workingType'] == 'autoDelete':
+		getKeywords()
+		if config['loginType']['type'] == 'json':
+			getUserConfigration()
+		elif config['loginType']['type'] == 'cookie':
+			getCookie()
+
+	return
+
+def getUserConfigration():
+	print u'使用配置文件：' + config['loginType']['filename'] + '...\n'
+
+	try:
+		f = file(config['loginType']['filename'])
+	except IOError, e:
+		print u'无法打开配置文件，文件可能不存在'
+		sys.exit(1)
+	else:
+		try:
+			jsonObj = json.load(f)
+		except Exception, e:
+			print u'无法解析配置文件，文件格式可能不对'
+			sys.exit(1)
+		else:
+			if 'username' in jsonObj and 'password' in jsonObj:
+				config['user']['username'] = jsonObj['username']
+				config['user']['password'] = jsonObj['password']
+			else:
+				print u'无效的配置文件，请使用 TiebaAutoTool.py user-config 来生成配置文件'
+				sys.exit(1)
+	finally:
+		f.close()
+
+	return
+
+def getCookie():
+	loadCookie(config['loginType'])
+
+	return
+
+def getKeywords():
+	try:
+		f = file('keywords.conf')
+	except IOError, e:
+		print u'无法打开 keywords 配置文件，文件可能不存在'
+		sys.exit(1)
+	else:
+		try:
+			global keywords
+			keywords = json.load(f)
+		except Exception, e:
+			print u'无法解析配置文件，文件格式可能不对'
+			sys.exit(1)
+	finally:
+		f.close()
 
 	return
 

@@ -48,6 +48,17 @@ import urllib2
 #------------------------------------------------------------
 # Function Name: isLogined
 # Return: Boolean
+#------------------------------------------------------------
+# Function Name: webIOInitialization
+#------------------------------------------------------------
+# Function Name: loadCookie
+# Parameter:
+# loginType = {
+#     'filename' : 'cookie.txt'
+# }
+#------------------------------------------------------------
+# Function Name: saveCookie
+# Parameter: filename = 'cookie.txt'
 #============================================================
 # global variable list:
 # _cj
@@ -186,7 +197,7 @@ def loadCookie(loginType):
 
 	return
 
-def saveCookie(user, filename):
+def saveCookie(filename):
 	_cj.save(filename, True)
 
 	return

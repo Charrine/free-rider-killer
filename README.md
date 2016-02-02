@@ -10,29 +10,40 @@
 
 
 ##使用方法
-删贴机支持两种使用方法，您可以在参数中直接给出用户名，或者在一个json文件中给出（推荐）
+删贴机支持三种使用方法，您可以在参数中直接给出用户名，或者在一个 json 文件中给出（推荐），或者使用 cookie（推荐）。
+<br>
 您可以在运行时在命令行中直接提供用户名
 
- - `-u username`
- - `-p password`
-
 `python2 TiebaAutoTool.py run -u username -p password`
+<br>
+您也可以配置 json 文件，它看起来应该想下面这样
+    {
+        "username" : "您的用户名",
+        "password" : "您的密码"
+    }
 
-您还可以使用一个json格式的配置文件来保存你的用户名和密码，例如配置文件为tieba.json，那么它看起来应该想下面这样
+`python2 TiebaAutoTool.py config-user`
+<br>
+并使用它运行删贴机
 
-	{
-		"username" : "您的用户名",
-		"password" : "您的密码"
-	}
-然后，你可以使用下面的方法来启动删贴机
+`python2 TiebaAutoTool.py run -l json`
+`python2 TiebaAutoTool.py run -l json -c tieba.json`
+<br>
+您也可以配置 cookie 文件
 
-	python2 TiebaAutoTool.py run -c tieba.json
+`python2 TiebaAutoTool.py config-cookie`
+<br>
+并使用它运行删贴机
 
+`python2 TiebaAutoTool.py run -l cookie`
+`python2 TiebaAutoTool.py run -l cookie -k cookie.txt`
+
+<br>
 如果您不给出文件名参数
 
-	python2 TiebaAutoTool.py run
+`python2 TiebaAutoTool.py run`
 
-那么将使用默认的配置文件名，即程序目录下的tieba.json
+那么将使用 json 方法默认的配置文件名，即程序目录下的tieba.json
 
 
 ----------
