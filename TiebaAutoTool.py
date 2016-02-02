@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 import json
+import os
 import re
 import sys
 import time
@@ -28,54 +29,73 @@ def judge(threadData):
 
 	return grade
 
-def parseArgument(config):
+def parseArgument():
 	import argparse
-	
+
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument('choices', choices = ['run', 'config'], help = u'使用"run"来运行删帖机，使用"config"来生成一个配置文件')
-	parser.add_argument('-c', help = u'json格式的配置文件名，若未给出则默认为default.json', dest = 'filename', default = 'default.json')
-	parser.add_argument('-u', '--username', help = u'指定登陆的用户名')
-	parser.add_argument('-p', '--password', help = u'密码，必须和上一项结合使用')
-	parser.add_argument('-n'              , help = u'贴吧名，不包含‘吧’', default = u'c语言')
-	# parser.add_argument('--fid',          , help = u'fid', )
-	parser.add_argument('-d', '--debug'   , help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
-	parser.add_argument('-v', '--version' , help = u'显示版本信息并退出', action = "version", version = '0.1')
+	#TODO: forum
+	#TODO: how to set default for choices
+	parser.add_argument('workingType', choices = ['run', 'config-user', 'config-cookie'], help = u'使用 "run" 来运行删帖机，使用 "config-user" 来生成一个用户配置文件，使用 "config-cookie" 来生成一个 cookie 配置文件', default = u'run')
+	parser.add_argument('-l', '--login-type',     help = u'使用 argument 来登陆，使用 json 来登陆，使用 cookie 来登陆', dest = 'loginType', default = u'json')#choices = ['argument', 'json', 'cookie'],
+	parser.add_argument('-cp', '--user-path',     help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
+	parser.add_argument('-kp', '--cookie-path',   help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
+	parser.add_argument('-u',  '--username',      help = u'指定登陆的用户名')
+	parser.add_argument('-p',  '--password',      help = u'密码，必须和上一项结合使用')
+	#parser.add_argument('-f',  '--forum'          help = u'贴吧名，不包含‘吧’', default = u'c语言')
+	parser.add_argument('-d',  '--debug' ,        help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
+	parser.add_argument('-v',  '--version' ,      help = u'显示版本信息并退出', action = "version", version = '0.1')
 	args = parser.parse_args()
 
-	config['debug'] = args.debug
-
-	if args.choices == 'run':
-		if args.username != None:
-			config['username'] = args.username.decode(config['stdincoding'])
-			if args.password == None:
-				print u'错误：未指定密码，-u选项必须和-p选项连用\n'
+	if args.workingType == 'run':
+		config['workingType'] = 'autoDelete'
+		if args.loginType == 'argument':
+			config['loginType']['type'] = 'argument'
+			if args.username != None and args.password != None:
+				config['user']['username'] = args.username.decode(config['stdincoding'])
+				config['user']['password'] = args.password
+			else:
+				print u'错误：未指定用户名或者密码，-u选项必须和-p选项连用\n'
 				parser.print_help()
 				sys.exit(1)
-
-			config['password'] = args.password
-			config['type'] = 'argument'
+		elif args.loginType == 'json':
+			config['loginType']['type'] = 'json'
+			config['loginType']['filename'] = args.userFilename
+			getUserConfigration()
+		elif args.loginType == 'cookie':
+			config['loginType']['type'] = 'cookie'
+			config['loginType']['filename'] = args.cookieFilename
+			getCookie()
 		else:
-			config['filename'] = args.filename
-			config['type'] = 'json'
-	else:
-		config['type'] = 'config'
+				print u'错误：错误参数\n'
+				parser.print_help()
+				sys.exit(1)
+	elif args.workingType == 'config-user':
+		config['workingType'] = 'configUser'
+	elif args.workingType == 'config-cookie':
+		config['workingType'] = 'configCookie'
 
-	return config
+	#config['forum']['kw'] = args.forum
+	#config['forum']['fid'] = getFid(config['forum']['kw'])
 
-def configure():
-	import os
+	if args.debug:
+		config['workingMode'] = 'debug'
+		print u'调试模式已开启！'
+
+	return
+
+def configureUser():
 	import getpass
 
 	isLogined = False
 
 	print u'请输入配置文件的文件名按回车使用默认文件:',
-	config['filename'] = raw_input()
-	if config['filename'] == '':
+	config['loginType']['filename'] = raw_input()
+	if config['loginType']['filename'] == '':
 		print u'使用默认配置文件default.json'
 		config['filename'] = 'default.json'
-	print u'-----将使用:%s -----' %(config['filename'])
-	if os.path.exists(config['filename']):
+	print u'-----将使用:%s -----' %(config['loginType']['filename'])
+	if os.path.exists(config['loginType']['filename']):
 		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
 		inputs = raw_input()
 		if inputs != 'y' and inputs != 'Y':
@@ -84,15 +104,15 @@ def configure():
 
 	while isLogined == False:
 		print u'请输入用户名:',
-		config['username'] = raw_input()
+		config['user']['username'] = raw_input()
 
 		print u'请输入密码（无回显）',
 
-		config['password'] = getpass.getpass(':')
+		config['user']['password'] = getpass.getpass(':')
 
 		print u'-----登陆测试-----'
-		if config['debug'] == False:
-			isLogined = adminLogin(config['username'], config['password'])
+		if config['workingMode'] != 'debug':
+			isLogined = adminLogin(config['user'])
 			if isLogined == False:
 				print u'登陆失败...按q可退出,回车继续尝试'
 				inputs = raw_input()
@@ -105,55 +125,50 @@ def configure():
 			isLogined = True
 			print u'\n因调试而跳过登陆验证\n'
 
-	print u'请输入贴吧名称（不带‘吧’，如希望管理c语言吧，则输入‘c语言’）'
-	config['kw'] = raw_input()
-
-
-
-	print u'请输入fid：',
-	config['fid'] = raw_input()
-
-	config['kw']     = config['kw'].decode(config['stdincoding'])
-	config['username'] = config['username'].decode(config['stdincoding'])
+	config['user']['username'] = config['user']['username'].decode(config['stdincoding'])
 	with open(config['filename'], "w") as configfile:
 		configfile.write('{\n')
-		configfile.write('    "username":"' + config['username'].encode('utf8') + '",\n')
-		configfile.write('    "password":"' + config['password'] + '",\n')
-		configfile.write('    "kw":"' + config['kw'].encode('utf8') + '",\n')
-		configfile.write('    "fid":' + config['fid'] + '\n')
+		configfile.write('    "username":"' + config['user']['username'].encode('utf8') + '",\n')
+		configfile.write('    "password":"' + config['user']['password'] + '",\n')
 		configfile.write('}')
 	print u'-----写入成功-----'
-	print u'请使用python TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
+	#print u'请使用python TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
 	#Todo 根据用户的输入生成配置文件
 
 
-def getConfigrations(config):
-	print u'使用配置文件：' + config['filename'] + '...\n'
+def getUserConfigration():
+	print u'使用配置文件：' + config['loginType']['filename'] + '...\n'
 
 	try:
-		f = file(config['filename'])
+		f = file(config['loginType']['filename'])
 	except IOError, e:
 		print u'无法打开配置文件，文件可能不存在'
 		sys.exit(1)
-	finally:
-		pass
-	jsonobj = json.load(f)
-	f.close()
-
-	if 'username' in jsonobj and 'password' in jsonobj and 'kw' in jsonobj and 'fid' in jsonobj:
-		config['username'] = jsonobj['username']
-		config['password'] = jsonobj['password']
-		config['kw']     = jsonobj['kw']
-		config['fid']	   = jsonobj['fid']
-
 	else:
-		print u'无效的配置文件，请使用TiebaAutoTool.py config来生成配置文件'
-		sys.exit(2)
+		try:
+			jsonObj = json.load(f)
+		except Exception, e:
+			print u'无法解析配置文件，文件格式可能不对'
+			sys.exit(1)
+		else:
+			if 'username' in jsonObj and 'password' in jsonObj:
+				config['user']['username'] = jsonObj['username']
+				config['user']['password'] = jsonObj['password']
+			else:
+				print u'无效的配置文件，请使用 TiebaAutoTool.py user-config 来生成配置文件'
+				sys.exit(1)
+	finally:
+		f.close()
 
+	return
 
+def getCookie():
+	pass
 
-def main():
+def configureCookie():
+	pass
 
+def autoDelete():
 	deleteCount = 0
 	while(True):
 		try:
@@ -170,8 +185,8 @@ def main():
 						print u'\n-------------------------------------------\n\n'
 
 						if config['debug'] == False:
-							deleteThread(threadData, config)
-						#blockID(threadData, config)
+							deleteThread(threadData, config['forum'])
+						#blockID(threadData, config['forum'])
 						deleteCount += 1
 						time.sleep(5)
 		except Exception, e:
@@ -190,56 +205,69 @@ def main():
 
 	return
 
+def main():
+	print config
+	if config['workingType'] == 'configUser':
+		configureUser()
+	elif config['workingType'] == 'configCookie':
+		configureCookie()
+	elif config['workingType'] == 'autoDelete':
+		try:
+			f = file('keywords.conf')
+		except IOError, e:
+			print u'无法打开 keywords 配置文件，文件可能不存在'
+			sys.exit(1)
+		else:
+			try:
+				global keywords
+				keywords = json.load(f)
+			except Exception, e:
+				print u'无法解析配置文件，文件格式可能不对'
+				sys.exit(1)
+		finally:
+			f.close()
+
+		print u'使用用户名：' + config['user']['username']
+		isLogined = adminLogin(config['user'])
+		if isLogined:
+			autoDelete()
+		else:
+			sys.exit(1)
+
+	return
 
 # do some initialization work
 def init():
-
-	print '--- Initializing ---'
-
 	global config 
-	config = {}
-	
+	config = {
+		'user' : {
+			'username' : 'username',
+			'password' : 'password'
+		},
+		'forum' : {
+			'kw' : 'c语言',
+			'fid' : 22545
+		},
+		'workingMode' : 'normal',
+		'workingType' : 'autoDelete',
+		'loginType' : {
+			'type' : 'none',
+			'filename' : ''
+		},
+		'stdincoding' : 'utf8'
+	}
 
 	if sys.stdin.encoding == 'cp936':
 		config['stdincoding'] = 'gbk'
 	else:
 		config['stdincoding'] = 'utf8'
 
-	parseArgument(config)
-	if config['debug']:
-		print u'调试模式已开启！'
+	parseArgument()
 
-	
+	#webIOInitialization()
 
-	if config['type'] == 'config':
-		configure()
-		sys.exit(0)
-	elif config['type'] == 'json':
-		getConfigrations(config)
-
-
-	try:
-		global keywords
-		f = file('keywords.conf')
-		keywords = json.load(f)
-	except IOError, e:
-		print u'无法打开 keywords 配置文件，文件可能不存在'
-		sys.exit(1)
-	finally:
-		f.close()
-
-
-	print u'使用用户名：' + config['username']
-
-
-	isLogined = adminLogin(config)
-
-	if isLogined == False:
-		sys.exit(1)
-
-	print "--- Initialize succeessful ---"
+	return
 
 if __name__ == '__main__':
-
 	init()
 	main()
