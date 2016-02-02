@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import bs4
 import cookielib
 import gzip
 import json
@@ -38,9 +39,12 @@ import urllib2
 # }
 # Return: Boolean
 #------------------------------------------------------------
-# Function Name: getIndexPage
-# TODO
-# Return: Boolean
+# Function Name: getThreadDataList
+# Parameter:
+# configData = {
+#     'kw' : 'c语言'
+# }
+# Return: threadDataList
 #------------------------------------------------------------
 # Function Name: isLogined
 # Return: Boolean
@@ -87,6 +91,7 @@ def deleteThread(threadData, configData):
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
+		#TODO: split log, log function should be called by main
 		_recordHistory(threadData, 'delete')
 		return True
 	else:
@@ -125,9 +130,35 @@ def blockID(threadData, configData):
 		logFile.close()
 		return False
 
-def getIndexPage(kw):
-	#TODO: return data rather than html
-	return _genericGet('http://tieba.baidu.com/f?kw=' + kw)
+def getThreadDataList(configData):
+	data = _genericGet('http://tieba.baidu.com/f?kw=' + configData['kw'])
+
+	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
+	# there will be a error occured when you trying to print threadData['abstract'] to console
+	html = data.decode('utf8').encode('gbk','replace').decode('gbk')
+	soup = bs4.BeautifulSoup(html, 'html5lib')
+	threadList = soup.select('.j_thread_list')
+	topThreadNum = len(soup.select('.thread_top'))
+
+	threadDataList = []
+	for thread in threadList[topThreadNum:]:
+		dataField = json.loads(thread['data-field'])
+		threadData = {
+			'title' : thread.select('a.j_th_tit')[0].string,
+			'author' : dataField['author_name'],
+			'abstract' : thread.select('div.threadlist_abs')[0].string,
+			'tid' : dataField['id'],
+			'pid' : dataField['first_post_id'],
+			'goodThread' : dataField['is_good'],
+			'topThread' : dataField['is_top'],
+			'replyNum' : dataField['reply_num']
+		}
+		#threadData['abstract'] maybe None, and this may cause a lot of problems!!!
+		threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
+		threadDataList.append(threadData)
+
+	return threadDataList
+
 
 def isLogined():
 	if 'BDUSS' in str(_cj):
@@ -156,11 +187,11 @@ def _initializeCookieJar():
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
-	request.add_header('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-	request.add_header('Accept-Encoding','gzip,deflate,sdch');
-	request.add_header('Accept-Language','zh-CN,zh;q=0.8');
-	request.add_header('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36');
-	request.add_header('Content-Type','application/x-www-form-urlencoded');
+	request.add_header('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
+	request.add_header('Accept-Encoding','gzip,deflate,sdch')
+	request.add_header('Accept-Language','zh-CN,zh;q=0.8')
+	request.add_header('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36')
+	request.add_header('Content-Type','application/x-www-form-urlencoded')
 
 	return _genericGet(request)
 
