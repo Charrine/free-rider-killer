@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import getpass
 import json
 import os
 import re
@@ -38,11 +39,11 @@ def parseArgument():
 	#TODO: how to set default for choices
 	parser.add_argument('workingType', choices = ['run', 'config-user', 'config-cookie'], help = u'使用 "run" 来运行删帖机，使用 "config-user" 来生成一个用户配置文件，使用 "config-cookie" 来生成一个 cookie 配置文件', default = u'run')
 	parser.add_argument('-l', '--login-type',     help = u'使用 argument 来登陆，使用 json 来登陆，使用 cookie 来登陆', dest = 'loginType', default = u'json')#choices = ['argument', 'json', 'cookie'],
-	parser.add_argument('-c', '--user-path',     help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
-	parser.add_argument('-k', '--cookie-path',   help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
+	parser.add_argument('-c', '--user-path',      help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
+	parser.add_argument('-k', '--cookie-path',    help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
 	parser.add_argument('-u',  '--username',      help = u'指定登陆的用户名')
 	parser.add_argument('-p',  '--password',      help = u'密码，必须和上一项结合使用')
-	#parser.add_argument('-f',  '--forum'          help = u'贴吧名，不包含‘吧’', default = u'c语言')
+	parser.add_argument('-f',  '--forum',         help = u'贴吧名，不包含‘吧’', default = u'c语言')
 	parser.add_argument('-d',  '--debug' ,        help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v',  '--version' ,      help = u'显示版本信息并退出', action = "version", version = '0.1')
 	args = parser.parse_args()
@@ -73,8 +74,7 @@ def parseArgument():
 	elif args.workingType == 'config-cookie':
 		config['workingType'] = 'configCookie'
 
-	#config['forum']['kw'] = args.forum
-	#config['forum']['fid'] = getFid(config['forum']['kw'])
+	config['forum']['kw'] = args.forum
 
 	if args.debug:
 		config['workingMode'] = 'debug'
@@ -83,8 +83,6 @@ def parseArgument():
 	return
 
 def configureUser():
-	import getpass
-
 	print u'请输入配置文件的文件名(按回车使用默认文件):',
 	filename = raw_input()
 	if filename == '':
@@ -133,8 +131,6 @@ def configureUser():
 	print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
 
 def configureCookie():
-	import getpass
-
 	print u'请输入 cookie 文件的文件名(按回车使用默认文件):',
 	filename = raw_input()
 	if filename == '':
@@ -239,7 +235,7 @@ def init():
 		},
 		'forum' : {
 			'kw' : 'c语言',
-			'fid' : 22545
+			'fid' : 225451
 		},
 		'workingMode' : 'normal',
 		'workingType' : 'autoDelete',
@@ -265,7 +261,8 @@ def init():
 			getUserConfigration()
 		elif config['loginType']['type'] == 'cookie':
 			getCookie()
-
+		config['forum']['fid'] = getFid(config['forum'])
+		print config['forum']['fid']
 	return
 
 def getUserConfigration():

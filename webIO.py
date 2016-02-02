@@ -3,6 +3,7 @@ import bs4
 import cookielib
 import gzip
 import json
+import re
 import StringIO
 import time
 import urllib
@@ -201,6 +202,13 @@ def saveCookie(filename):
 	_cj.save(filename, True)
 
 	return
+
+def getFid(forum):
+	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
+	s = re.search(r'"forum_info":{"forum_id":\d*,', data)
+	m = re.match(r'"forum_info":{"forum_id":(?P<fid>\d*),', s.group())
+
+	return m.groupdict()['fid']
 
 #Local function
 

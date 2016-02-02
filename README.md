@@ -38,6 +38,8 @@
 `python2 TiebaAutoTool.py run -l cookie`
 `python2 TiebaAutoTool.py run -l cookie -k cookie.txt`
 
+您可以指定贴吧名字
+`python2 TiebaAutoTool.py run -f c语言`
 <br>
 如果您不给出文件名参数
 
