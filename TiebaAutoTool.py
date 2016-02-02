@@ -107,20 +107,20 @@ def configure():
 			print u'\n因调试而跳过登陆验证\n'
 
 	print u'请输入贴吧名称（不带‘吧’，如希望管理c语言吧，则输入‘c语言’）'
-	config['name'] = raw_input()
+	config['kw'] = raw_input()
 
 
 
 	print u'请输入fid：',
 	config['fid'] = raw_input()
 
-	config['name']     = config['name'].decode(config['stdincoding'])
+	config['kw']     = config['kw'].decode(config['stdincoding'])
 	config['username'] = config['username'].decode(config['stdincoding'])
 	with open(config['filename'], "w") as configfile:
 		configfile.write('{\n')
 		configfile.write('    "username":"' + config['username'].encode('utf8') + '",\n')
 		configfile.write('    "password":"' + config['password'] + '",\n')
-		configfile.write('    "name":"' + config['name'].encode('utf8') + '",\n')
+		configfile.write('    "kw":"' + config['kw'].encode('utf8') + '",\n')
 		configfile.write('    "fid":' + config['fid'] + '\n')
 		configfile.write('}')
 	print u'-----写入成功-----'
@@ -141,10 +141,10 @@ def getConfigrations(config):
 	jsonobj = json.load(f)
 	f.close()
 
-	if 'username' in jsonobj and 'password' in jsonobj and 'name' in jsonobj and 'fid' in jsonobj:
+	if 'username' in jsonobj and 'password' in jsonobj and 'kw' in jsonobj and 'fid' in jsonobj:
 		config['username'] = jsonobj['username']
 		config['password'] = jsonobj['password']
-		config['name']     = jsonobj['name']
+		config['kw']     = jsonobj['kw']
 		config['fid']	   = jsonobj['fid']
 
 	else:
@@ -158,7 +158,7 @@ def main():
 	deleteCount = 0
 	while(1):
 		try:
-			data = genericGet('http://tieba.baidu.com/f?kw=' + config['name'])
+			data = getIndexPage(config['kw'])
 
 			# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
 			# there will be a error occured when you trying to print threadData['abstract'] to console
@@ -193,8 +193,8 @@ def main():
 						print u'\n-------------------------------------------\n\n'
 
 						if config['debug'] == False:
-							deleteThread(threadData)
-						#blockID(threadData)
+							deleteThread(threadData, config)
+						#blockID(threadData, config)
 						deleteCount += 1
 						time.sleep(5)
 		except Exception, e:
@@ -255,7 +255,7 @@ def init():
 	print u'使用用户名：' + config['username']
 
 
-	isLogined = adminLogin(config['username'], config['password'])
+	isLogined = adminLogin(config)
 
 	if isLogined == False:
 		sys.exit(1)
