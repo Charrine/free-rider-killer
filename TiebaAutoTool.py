@@ -3,7 +3,7 @@ import json
 import re
 import sys
 import time
-
+from bar import *
 from webIO import *
 
 reload(sys)
@@ -173,7 +173,7 @@ def main():
 							deleteThread(threadData, config)
 						#blockID(threadData, config)
 						deleteCount += 1
-						time.sleep(5)
+						sleep(5)
 		except Exception, e:
 			print e
 			logFile = open('error.log', 'a')
@@ -183,18 +183,17 @@ def main():
 			time.sleep(10)
 		else:
 			if deleteCount != 0:
-				print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
-			print 'Waiting for more post...'
-			time.sleep(60)
+				print '已检查首页: 已删除{0} 个帖子'.format(deleteCount)
+			print '等待更多新帖...'
+			sleep(60)
 			deleteCount = 0
 
 	return
 
-
 # do some initialization work
 def init():
 
-	print '--- Initializing ---'
+	
 
 	global config 
 	config = {}
@@ -206,10 +205,11 @@ def init():
 		config['stdincoding'] = 'utf8'
 
 	parseArgument(config)
+
+	print '--- Initializing ---'
 	if config['debug']:
 		print u'调试模式已开启！'
 
-	
 
 	if config['type'] == 'config':
 		configure()
