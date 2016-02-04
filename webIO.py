@@ -223,7 +223,7 @@ def _genericPost(url, postdata):
 	return _genericGet(request)
 
 def _genericGet(url):
-	connection = urllib2.urlopen(url, timeout = 5)
+	connection = urllib2.urlopen(url, timeout = 10)
 	data = connection.read()
 	connection.close()
 

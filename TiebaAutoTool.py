@@ -16,7 +16,6 @@ def judge(threadData):
 	previewGrade = 0
 
 	preview = (u'None' if threadData['abstract'] == None else threadData['abstract'])
-	# print keywords[1][0]
 	for keyword in keywords:
 		arr = re.findall(keyword[0], threadData['title'])
 		if len(arr):
@@ -35,54 +34,24 @@ def parseArgument():
 
 	parser = argparse.ArgumentParser()
 
-	#TODO: forum
-	#TODO: how to set default for choices
-	parser.add_argument('workingType', choices = ['run', 'config-user', 'config-cookie'], help = u'使用 "run" 来运行删帖机，使用 "config-user" 来生成一个用户配置文件，使用 "config-cookie" 来生成一个 cookie 配置文件', default = u'run')
-	parser.add_argument('-l', '--login-type',     help = u'使用 argument 来登陆，使用 json 来登陆，使用 cookie 来登陆', dest = 'loginType', default = u'json')#choices = ['argument', 'json', 'cookie'],
-	parser.add_argument('-c', '--user-path',      help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'userFilename', default = 'default.json')
-	parser.add_argument('-k', '--cookie-path',    help = u'cookie 文件的路径，若未给出则默认为cookie.txt', dest = 'cookieFilename', default = 'cookie.txt')
-	parser.add_argument('-u',  '--username',      help = u'指定登陆的用户名')
-	parser.add_argument('-p',  '--password',      help = u'密码，必须和上一项结合使用')
-	parser.add_argument('-f',  '--forum',         help = u'贴吧名，不包含‘吧’', default = u'c语言')
-	parser.add_argument('-d',  '--debug' ,        help = u'调试模式，只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
+	parser.add_argument('workingType', choices = ['run', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件', default = 'run')
+	parser.add_argument('-c', '--configfile',      help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'configFilename', default = 'default.json')
+	parser.add_argument('-d',  '--debug' ,        help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v',  '--version' ,      help = u'显示版本信息并退出', action = "version", version = '0.1')
 	args = parser.parse_args()
 
+
 	if args.workingType == 'run':
-		config['workingType'] = 'autoDelete'
-		if args.loginType == 'argument':
-			config['loginType']['type'] = 'argument'
-			if args.username != None and args.password != None:
-				config['user']['username'] = args.username.decode(config['stdincoding'])
-				config['user']['password'] = args.password
-			else:
-				print u'错误：未指定用户名或者密码，-u选项必须和-p选项连用\n'
-				parser.print_help()
-				sys.exit(1)
-		elif args.loginType == 'json':
-			config['loginType']['type'] = 'json'
-			config['loginType']['filename'] = args.userFilename
-		elif args.loginType == 'cookie':
-			config['loginType']['type'] = 'cookie'
-			config['loginType']['filename'] = args.cookieFilename
-		else:
-			print u'错误：错误参数\n'
-			parser.print_help()
-			sys.exit(1)
-	elif args.workingType == 'config-user':
-		config['workingType'] = 'configUser'
-	elif args.workingType == 'config-cookie':
-		config['workingType'] = 'configCookie'
+		config['workingType'] = 'autoTool'
+		config['configFilename'] = args.configFilename
+	else:
+		config['workingType'] = 'config'
 
-	config['forum']['kw'] = args.forum
-
-	if args.debug:
-		config['workingMode'] = 'debug'
-		print u'调试模式已开启！'
+	config['debug'] = args.debug
 
 	return
 
-def configureUser():
+def configFileGenerator():
 	print u'请输入配置文件的文件名(按回车使用默认文件):',
 	filename = raw_input()
 	if filename == '':
@@ -94,7 +63,7 @@ def configureUser():
 	if os.path.exists(filename):
 		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
 		inputs = raw_input()
-		if inputs != 'y' and inputs != 'Y':
+		if inputs not in ['y', 'Y']:
 			print u'已取消'
 			sys.exit(0)
 
@@ -107,12 +76,12 @@ def configureUser():
 		config['user']['password'] = getpass.getpass(':')
 
 		print u'-----登陆测试-----'
-		if config['workingMode'] != 'debug':
+		if not config['debug']:
 			isLogined = adminLogin(config['user'])
 			if isLogined == False:
 				print u'登陆失败...按q可退出,回车继续尝试'
 				inputs = raw_input()
-				if inputs == 'q' or inputs == 'Q':
+				if inputs in ['q', 'Q']:
 					print u'程序退出，未作出任何更改...'
 					sys.exit(0)
 			else:
@@ -121,62 +90,36 @@ def configureUser():
 			isLogined = True
 			print u'\n因调试而跳过登陆验证\n'
 
+	print u'请输入贴吧名（不带‘吧’，如c语言吧则输入‘c语言’）'
+	config['forum']['kw'] = raw_input()
+
+	# decode into unicode
 	config['user']['username'] = config['user']['username'].decode(config['stdincoding'])
-	with open(filename, "w") as configfile:
-		configfile.write('{\n')
-		configfile.write('    "username" : "' + config['user']['username'].encode('utf8') + '",\n')
-		configfile.write('    "password" : "' + config['user']['password'] + '",\n')
-		configfile.write('}')
-	print u'-----写入成功-----'
-	print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % config['filename']
+	config['forum']['kw']      = config['forum']['kw'].decode(config['stdincoding'])
+	print u'-----------------\n请检查输入的信息是否正确'
+	print u'使用用户名：{0}\n密码：{1}\n管理贴吧{2}\n输入yes将会写入用户配置文件:'.format(config['user']['username'], '*'*len(config['user']['password']), config['forum']['kw']), 
+	inputs = raw_input()
 
-def configureCookie():
-	print u'请输入 cookie 文件的文件名(按回车使用默认文件):',
-	filename = raw_input()
-	if filename == '':
-		filename = 'cookie.txt'
-		print u'使用默认配置文件cookie.txt'
+	if inputs == 'yes':
+		with open(filename, "w") as configfile:
+			configfile.write('{\n')
+			configfile.write('    "username" : "' + config['user']['username'].encode('utf8') + '",\n')
+			configfile.write('    "password" : "' + config['user']['password'] + '",\n')
+			configfile.write('    "kw" : "' + config['forum']['kw'].encode('utf8') + '",\n')
+			configfile.write('}')
+		print u'-----写入成功-----'
+		print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % config['configFilename']
+
 	else:
-		print u'-----将使用:%s -----' %(filename)
-
-	if os.path.exists(filename):
-		print u'文件已存在，本操作将覆盖此文件，是否继续？(y继续操作)'
-		inputs = raw_input()
-		if inputs != 'y' and inputs != 'Y':
-			print u'已取消'
-			sys.exit(0)
-
-	isLogined = False
-	while isLogined == False:
-		print u'请输入用户名:',
-		config['user']['username'] = raw_input()
-
-		print u'请输入密码（无回显）',
-		config['user']['password'] = getpass.getpass(':')
-
-		print u'-----登陆测试-----'
-		if config['workingMode'] != 'debug':
-			isLogined = adminLogin(config['user'])
-			if isLogined == False:
-				print u'登陆失败...按q可退出,回车继续尝试'
-				inputs = raw_input()
-				if inputs == 'q' or inputs == 'Q':
-					print u'程序退出，未作出任何更改...'
-					sys.exit(0)
-			else:
-				print u'-----登陆成功！-----'
-		else:
-			isLogined = True
-			print u'\n因调试而跳过登陆验证\n'
-
-	saveCookie(filename)
-
+		print u'已取消，未做任何更改'
 	return
+
 
 def autoDelete():
 	deleteCount = 0
 	while(True):
 		try:
+			print u'获取首页...'
 			threadDataList = getThreadDataList(config['forum'])
 
 			for threadData in threadDataList:
@@ -189,8 +132,10 @@ def autoDelete():
 						print u'\n|得分：%f' % grade
 						print u'\n-------------------------------------------\n\n'
 
-						if config['workingMode'] != 'debug':
+						if not config['debug']:
 							deleteThread(threadData, config['forum'])
+						else:
+							print u'因为调试跳过删帖'
 						#blockID(threadData, config['forum'])
 						deleteCount += 1
 						time.sleep(5)
@@ -211,18 +156,17 @@ def autoDelete():
 	return
 
 def main():
-	if config['workingType'] == 'configUser':
-		configureUser()
-	elif config['workingType'] == 'configCookie':
-		configureCookie()
-	elif config['workingType'] == 'autoDelete':
+	if config['workingType'] == 'config':
+		configFileGenerator()
+	elif config['workingType'] == 'autoTool':
 		print u'使用用户名：' + config['user']['username']
+		webIOInitialization()
 		isLogined = adminLogin(config['user'])
 		if isLogined:
 			autoDelete()
 		else:
+			print u'登陆失败'
 			sys.exit(1)
-
 	return
 
 # do some initialization work
@@ -235,41 +179,33 @@ def init():
 		},
 		'forum' : {
 			'kw' : 'c语言',
-			'fid' : 225451
+			'fid' : 22545
 		},
-		'workingMode' : 'normal',
-		'workingType' : 'autoDelete',
-		'loginType' : {
-			'type' : 'none',
-			'filename' : ''
-		},
+		'debug' : False,
+		'workingType' : 'autoTool',
+		'configFilename' : 'default.json',
 		'stdincoding' : 'utf8'
 	}
-
-	if sys.stdin.encoding == 'cp936':
-		config['stdincoding'] = 'gbk'
-	else:
-		config['stdincoding'] = 'utf8'
-
+	getStdinCoding(config)
 	parseArgument()
 
 	print '--- Initializing ---'
-	webIOInitialization()
-	if config['workingType'] == 'autoDelete':
+
+	if config['debug']:
+		print u'调试已开启'
+	
+	if config['workingType'] == 'autoTool':
 		getKeywords()
-		if config['loginType']['type'] == 'json':
-			getUserConfigration()
-		elif config['loginType']['type'] == 'cookie':
-			getCookie()
+		getUserConfigration()
 		config['forum']['fid'] = getFid(config['forum'])
 		print config['forum']['fid']
 	return
 
 def getUserConfigration():
-	print u'使用配置文件：' + config['loginType']['filename'] + '...\n'
+	print u'使用配置文件：' + config['configFilename']+ '...\n'
 
 	try:
-		f = file(config['loginType']['filename'])
+		f = file(config['configFilename'])
 	except IOError, e:
 		print u'无法打开配置文件，文件可能不存在'
 		sys.exit(1)
@@ -280,32 +216,36 @@ def getUserConfigration():
 			print u'无法解析配置文件，文件格式可能不对'
 			sys.exit(1)
 		else:
-			if 'username' in jsonObj and 'password' in jsonObj:
-				config['user']['username'] = jsonObj['username']
-				config['user']['password'] = jsonObj['password']
+			if 'username' in jsonObj and 'password' in jsonObj and 'kw' in jsonObj:
+				config['user']['username'] = jsonObj['username'].decode('utf8')
+				config['user']['password'] = jsonObj['password'].decode('utf8')
+				config['forum']['kw']      = jsonObj['kw'].decode('utf8')
+
 			else:
-				print u'无效的配置文件，请使用 TiebaAutoTool.py user-config 来生成配置文件'
+				print u'无效的配置文件，请使用 TiebaAutoTool.py config 来生成配置文件'
 				sys.exit(1)
 	finally:
 		f.close()
 
 	return
 
+
 def getCookie():
 	loadCookie(config['loginType'])
-
 	return
 
 def getKeywords():
+	print u'获取关键词...'
+	global keywords
 	try:
-		f = file('keywords.conf')
+		f = file('test.json')
 	except IOError, e:
 		print u'无法打开 keywords 配置文件，文件可能不存在'
 		sys.exit(1)
 	else:
 		try:
-			global keywords
-			keywords = json.load(f)
+			
+			keywords = eval(f.read().decode('utf8'))
 		except Exception, e:
 			print u'无法解析配置文件，文件格式可能不对'
 			sys.exit(1)
@@ -313,6 +253,12 @@ def getKeywords():
 		f.close()
 
 	return
+
+def getStdinCoding(config):
+	if sys.stdin.encoding == 'cp936':
+		config['stdincoding'] = 'gbk'
+	else:
+		config['stdincoding'] = 'utf8'
 
 if __name__ == '__main__':
 	init()
