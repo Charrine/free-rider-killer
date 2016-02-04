@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-
+from bar import *
 from webIO import *
 
 reload(sys)
@@ -25,7 +25,7 @@ def judge(threadData):
 		if len(arr):
 			previewGrade += len(arr) * keyword[1]
 
-	grade = titleGrade / len(threadData['title']) + previewGrade / len(preview) * 1.2
+	grade = float(titleGrade) / len(threadData['title']) + float(previewGrade) / len(preview) * 1.1
 
 	return grade
 
@@ -77,6 +77,7 @@ def configFileGenerator():
 
 		print u'-----登陆测试-----'
 		if not config['debug']:
+
 			isLogined = adminLogin(config['user'])
 			if isLogined == False:
 				print u'登陆失败...按q可退出,回车继续尝试'
@@ -132,13 +133,23 @@ def autoDelete():
 						print u'\n|得分：%f' % grade
 						print u'\n-------------------------------------------\n\n'
 
+
 						if not config['debug']:
 							deleteThread(threadData, config['forum'])
+							deleteCount += 1
+							sleep(5)
+
 						else:
-							print u'因为调试跳过删帖'
+							print u'请确认是否删除（按y删除）：',
+							if raw_input() == 'y':
+								deleteThread(threadData, config['forum'])
+								deleteCount += 1				
+							else:
+								print u'因为调试跳过删帖'
+
 						#blockID(threadData, config['forum'])
-						deleteCount += 1
-						time.sleep(5)
+						
+						
 		except Exception, e:
 			print e
 			logFile = open('error.log', 'a')
@@ -148,19 +159,20 @@ def autoDelete():
 			time.sleep(10)
 		else:
 			if deleteCount != 0:
-				print 'Front Page Checked: {0} Post Deleted'.format(deleteCount)
-			print 'Waiting for more post...'
-			time.sleep(60)
+				print u'已检查首页: 已删除{0} 个帖子'.format(deleteCount)
+			else:
+				print u'等待更多新帖...'
+				sleep(60)
 			deleteCount = 0
 
 	return
+
 
 def main():
 	if config['workingType'] == 'config':
 		configFileGenerator()
 	elif config['workingType'] == 'autoTool':
 		print u'使用用户名：' + config['user']['username']
-		webIOInitialization()
 		isLogined = adminLogin(config['user'])
 		if isLogined:
 			autoDelete()
@@ -168,6 +180,7 @@ def main():
 			print u'登陆失败'
 			sys.exit(1)
 	return
+
 
 # do some initialization work
 def init():
@@ -188,9 +201,7 @@ def init():
 	}
 	getStdinCoding(config)
 	parseArgument()
-
-	print '--- Initializing ---'
-
+	webIOInitialization()
 	if config['debug']:
 		print u'调试已开启'
 	
@@ -229,7 +240,6 @@ def getUserConfigration():
 
 	return
 
-
 def getCookie():
 	loadCookie(config['loginType'])
 	return
@@ -238,7 +248,7 @@ def getKeywords():
 	print u'获取关键词...'
 	global keywords
 	try:
-		f = file('test.json')
+		f = file('keywords.txt')
 	except IOError, e:
 		print u'无法打开 keywords 配置文件，文件可能不存在'
 		sys.exit(1)
