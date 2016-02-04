@@ -3,6 +3,7 @@ import bs4
 import cookielib
 import gzip
 import json
+import os
 import re
 import StringIO
 import time
@@ -64,9 +65,8 @@ import urllib2
 # global variable list:
 # _cj
 
-def adminLogin(user):
+def adminLogin(user, filename = ''):
 	if isLogined():
-		print "--- Login succeessful ---"
 		return True
 	else:
 		print '--- Logining ---'
@@ -79,14 +79,11 @@ def adminLogin(user):
 		_genericPost('https://passport.baidu.com/v2/api/?login', postdata)
 
 		if isLogined():
-			print "--- Login succeessful ---"
+			if filename:
+				saveCookie(filename)
 			return True
 		else:
-			print "--- Login failed ---"
 			return False
-
-	return
-
 
 def deleteThread(threadData, forum):
 	print '--- Deleting ---'
@@ -112,10 +109,9 @@ def deleteThread(threadData, forum):
 		return True
 	else:
 		print '--- Delete failed ---'
-		logFile = open('error.log', 'a')
-		logFile.write(time.asctime() + '\n')
-		logFile.write('Delete failed error code' + err_code + '\n\n')
-		logFile.close()
+		with open('error.log', 'a') as f:
+			f.write(time.asctime() + '\n')
+			f.write('Delete failed error code' + err_code + '\n\n')
 		return False
 
 def blockID(threadData, forum):
@@ -126,7 +122,7 @@ def blockID(threadData, forum):
 		'tbs' : _getTbs(),
 		'fid' : forum['fid'],
 		'user_name[]' : threadData['author'],
-		'pids[]' : constantPid, 
+		'pids[]' : constantPid,
 		'day' : '1',
 		'ie' : 'utf-8',
 		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
@@ -140,16 +136,15 @@ def blockID(threadData, forum):
 		return True
 	else:
 		print '--- Block failed ---'
-		logFile = open('error.log', 'a')
-		logFile.write(time.asctime() + '\n')
-		logFile.write('Block failed error code' + err_code + '\n\n')
-		logFile.close()
+		with open('error.log', 'a') as f:
+			f.write(time.asctime() + '\n')
+			f.write('Block failed error code' + err_code + '\n\n')
 		return False
 
 def getThreadDataList(forum):
 	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
 
-	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶), 
+	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶),
 	# there will be a error occured when you trying to print threadData['abstract'] to console
 	html = data.decode('utf8').encode('gbk','replace').decode('gbk')
 	soup = bs4.BeautifulSoup(html, 'html5lib')
@@ -182,19 +177,19 @@ def isLogined():
 	else:
 		return False
 
-def webIOInitialization():
+def webIOInitialization(filename):
 	global _cj
 	_cj = cookielib.MozillaCookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
 	urllib2.install_opener(opener)
 
-	#Geting Cookie
-	_genericGet('http://www.baidu.com/')
+	if os.path.exists(filename):
+		loadCookie(filename)
 
 	return
 
-def loadCookie(loginType):
-	_cj.load(loginType['filename'], True)
+def loadCookie(filename):
+	_cj.load(filename, True)
 
 	return
 
@@ -281,4 +276,3 @@ def _recordHistory(threadData, logType):
 		logFile.write('},\n')
 
 	logFile.close()
-

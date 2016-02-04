@@ -1,4 +1,11 @@
+#log file
 history.log
 error.log
+
+#config file
 *.json
+
+#cookie file
+*.co
+
 *.pyc
