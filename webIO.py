@@ -10,6 +10,8 @@ import time
 import urllib
 import urllib2
 
+from log import *
+
 #============================================================
 # Function Name: adminLogin
 # Parameter:
@@ -104,14 +106,11 @@ def deleteThread(threadData, forum):
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
-		#TODO: split log, log function should be called by main
-		_recordHistory(threadData, 'delete')
+		uniout(threadData, method = 'DELETE')
 		return True
 	else:
 		print '--- Delete failed ---'
-		with open('error.log', 'a') as f:
-			f.write(time.asctime() + '\n')
-			f.write('Delete failed error code' + err_code + '\n\n')
+		uniout('Delete failed error code: ' + err_code + '\n\n', method = 'ERROR')
 		return False
 
 def blockID(threadData, forum):
@@ -132,13 +131,11 @@ def blockID(threadData, forum):
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
-		_recordHistory(threadData, 'block')
+		uniout(threadData, method = 'BLOCK')
 		return True
 	else:
 		print '--- Block failed ---'
-		with open('error.log', 'a') as f:
-			f.write(time.asctime() + '\n')
-			f.write('Block failed error code' + err_code + '\n\n')
+		uniout('Delete failed error code: ' + err_code + '\n\n', method = 'ERROR')
 		return False
 
 def getThreadDataList(forum):
@@ -244,35 +241,3 @@ def _getToken():
 	token = json.loads(data.replace('\'', '"'))['data']['token']
 
 	return token
-
-
-
-
-
-
-
-
-#TODO: split
-def _recordHistory(threadData, logType):
-	logFile = open('history.log', 'a')
-
-	if logType == 'delete':
-		logFile.write('{\n')
-		logFile.write('    "type" : "delete",\n')
-		logFile.write('    "data" : {\n')
-		logFile.write('        "time" : "' + time.asctime() + '",\n')
-		logFile.write('        "title" : "' + threadData['title'].encode('utf-8') + '",\n')
-		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-		logFile.write('        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n')
-		logFile.write('    }\n')
-		logFile.write('},\n')
-	elif logType == 'block':
-		logFile.write('{\n')
-		logFile.write('    "type" : "block",\n')
-		logFile.write('    "data" : {\n')
-		logFile.write('        "time" : "' + time.asctime() + '",\n')
-		logFile.write('        "author" : "' + threadData['author'].encode('utf-8') + '",\n')
-		logFile.write('    }\n')
-		logFile.write('},\n')
-
-	logFile.close()
