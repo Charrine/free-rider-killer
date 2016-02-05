@@ -13,6 +13,7 @@ class bar(object):
 	def update(self, number, percent):
 		length = int(self.width * percent)
 		sys.stdout.write(self.message+'{0:>3}{3}[{1:=>{2}}]\r'.format(number, ' '*(self.width-length), self.width, self.symbol))
+		sys.stdout.flush()
 
 	def wipe(self):
 		sys.stdout.write(' '*(self.width + 6)+'\r')
@@ -31,4 +32,4 @@ def sleep(sleeptime):
 
 	stat.flush()
 
-#sleep(5)
+sleep(60)
