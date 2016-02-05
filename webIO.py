@@ -106,7 +106,7 @@ def deleteThread(threadData, forum):
 
 	if err_code == 0:
 		print '--- Delete succeessful ---'
-		uniout(threadData, method = 'DELETE')
+		uniout(threadData = threadData, method = 'DELETE')
 		return True
 	else:
 		print '--- Delete failed ---'
@@ -131,7 +131,7 @@ def blockID(threadData, forum):
 
 	if err_code == 0:
 		print '--- Block succeessful ---'
-		uniout(threadData, method = 'BLOCK')
+		uniout(threadData = threadData, method = 'BLOCK')
 		return True
 	else:
 		print '--- Block failed ---'

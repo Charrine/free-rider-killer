@@ -31,5 +31,3 @@ def sleep(sleeptime):
 		x -= 1
 
 	stat.flush()
-
-sleep(60)
