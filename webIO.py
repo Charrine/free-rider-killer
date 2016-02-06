@@ -71,7 +71,6 @@ def adminLogin(user, filename = ''):
 	if isLogined():
 		return True
 	else:
-		print '--- Logining ---'
 		postdata = {
 			'token' : _getToken(),
 			'tpl' : 'pp',
@@ -88,8 +87,6 @@ def adminLogin(user, filename = ''):
 			return False
 
 def deleteThread(threadData, forum):
-	print '--- Deleting ---'
-
 	postdata = {
 		'tbs' : _getTbs(),
 		'kw' : forum['kw'],
@@ -105,12 +102,10 @@ def deleteThread(threadData, forum):
 	err_code = json.loads(_decodeGzip(data))['err_code']
 
 	if err_code == 0:
-		print '--- Delete succeessful ---'
-		uniout(threadData = threadData, method = 'DELETE')
+		threadData['operation'] = 'delete'
+		threadData['time'] = time.strftime(u'%Y年%m月%d日 %H时%M分%S秒',time.localtime())
 		return True
 	else:
-		print '--- Delete failed ---'
-		uniout('Delete failed error code: ' + err_code + '\n\n', method = 'ERROR')
 		return False
 
 def blockID(threadData, forum):
@@ -130,12 +125,10 @@ def blockID(threadData, forum):
 	err_code = json.loads(_decodeGzip(data))['err_code']
 
 	if err_code == 0:
-		print '--- Block succeessful ---'
-		uniout(threadData = threadData, method = 'BLOCK')
+		threadData['operation'] = 'block'
+		threadData['time'] = time.strftime(u'%Y年%m月%d日 %H时%M分%S秒',time.localtime())
 		return True
 	else:
-		print '--- Block failed ---'
-		uniout('Delete failed error code: ' + err_code + '\n\n', method = 'ERROR')
 		return False
 
 def getThreadDataList(forum):
