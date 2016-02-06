@@ -1,7 +1,7 @@
 #log file
 history.log
 error.log
-
+log.log
 #config file
 *.json
 
