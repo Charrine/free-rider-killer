@@ -3,7 +3,6 @@
 import time
 import sys
 
-
 class bar(object):
 	def __init__(self, width, message, symbol = '%'):
 		self.message = message

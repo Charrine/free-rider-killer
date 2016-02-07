@@ -11,8 +11,6 @@ from log import log
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-config = {}
-
 def compileKeywords(keywords):
 	for i in range(len(keywords)):
 		keywords[i].append(re.compile(keywords[i][0],re.I))
@@ -98,7 +96,7 @@ def configFileGenerator():
 	print u'请输入贴吧名（不带‘吧’，如c语言吧则输入‘c语言’）: ',
 	config['forum']['kw'] = raw_input().decode(config['stdincoding'])
 
-	print u'请输入API key：',
+	print u'请输入API key: ',
 	config['apikey'] = raw_input()
 
 	print u'-----------------\n请检查输入的信息是否正确'
@@ -126,7 +124,7 @@ def configFileGenerator():
 def autoDelete():
 	deleteCount = 0
 	while(True):
-		# try:
+		try:
 			outputLOG.log(u'获取首页...', 'INFO')
 			threadDataList = getThreadDataList(config['forum'])
 
@@ -137,11 +135,11 @@ def autoDelete():
 
 					#only delete posts which has less than 10 replies
 					if threadData['grade'] > 6 and threadData['replyNum'] < 10:
-						
+
 						postLOG.PrintPost(threadData)
 						if not config['debug']:
 							outputLOG.log(u'正在删除帖子', 'INFO')
-							if deleteThread(threadData, config['forum']):							
+							if deleteThread(threadData, config['forum']):
 								outputLOG.log(u'删除成功', 'SUCCESS')
 								outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
 								postLOG.log(threadData)
@@ -162,7 +160,7 @@ def autoDelete():
 								if deleteThread(threadData, config['forum']):
 									outputLOG.log(u'删除成功', 'SUCCESS')
 									outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
-									
+
 									postLOG.log(threadData)
 									if postLOG.getLastError():
 										outputLOG.log(postLOG.errorMessage, 'ERROR')
@@ -172,7 +170,7 @@ def autoDelete():
 							else:
 								outputLOG.log(u'跳过删帖', 'DEBUG')
 
-						
+
 
 		except Exception, e:
 			print e
@@ -293,7 +291,6 @@ def getKeywords():
 	return
 
 def getStdinCoding():
-
 	if sys.stdin.encoding == 'cp936':
 		config['stdincoding'] = 'gbk'
 	else:

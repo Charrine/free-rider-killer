@@ -12,61 +12,6 @@ import urllib2
 
 from log import *
 
-#============================================================
-# Function Name: adminLogin
-# Parameter:
-# user = {
-#     'username' : 'username',
-#     'password' : 'password'
-# }
-# Return: Boolean
-#------------------------------------------------------------
-# Function Name: deleteThread
-# Parameter:
-# threadData = {
-#     'tid' : 4304106830,
-#     'pid' : 82457746974
-# }
-# forum = {
-#     'kw' : 'c语言',
-#     'fid' : 22545
-# }
-# Return: Boolean
-#------------------------------------------------------------
-# Function Name: blockID
-# Parameter:
-# threadData = {
-#     'author' : 'author'
-# }
-# forum = {
-#     'fid' : 22545
-# }
-# Return: Boolean
-#------------------------------------------------------------
-# Function Name: getThreadDataList
-# Parameter:
-# forum = {
-#     'kw' : 'c语言'
-# }
-# Return: threadDataList
-#------------------------------------------------------------
-# Function Name: isLogined
-# Return: Boolean
-#------------------------------------------------------------
-# Function Name: webIOInitialization
-#------------------------------------------------------------
-# Function Name: loadCookie
-# Parameter:
-# loginType = {
-#     'filename' : 'cookie.txt'
-# }
-#------------------------------------------------------------
-# Function Name: saveCookie
-# Parameter: filename = 'cookie.txt'
-#============================================================
-# global variable list:
-# _cj
-
 def adminLogin(user, filename = ''):
 	if isLogined():
 		return True
