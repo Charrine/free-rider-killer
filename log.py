@@ -2,6 +2,9 @@
 import sys
 import time
 import colorama
+from datetime import datetime
+from cloudLog import *
+
 
 __LOGLEVEL__ = {
 	'DEBUG':0,
@@ -20,7 +23,7 @@ __LOGTYPE__ = {
 
 class log(object):
 	"""This class provide you a simple interface to output or store logs"""
-	def __init__(self, logmethod, logtype, level = 'DEFAULT'):
+	def __init__(self, logmethod, logtype, level = 'DEFAULT', key = ''):
 		"""logmethod will specify the place where logs will be stored or displaied
 				it's value could be 'console', 'file', 'cloud' or 'mysql'
 					'console' means the log data will display on the console
@@ -33,7 +36,8 @@ class log(object):
 		self.method = logmethod
 		self.level = __LOGLEVEL__[level]
 		self.type = logtype
-
+		self.__key__ = key
+		self.lastError = False
 		if 'console' in logmethod:
 			colorama.init(autoreset = True)
 
@@ -50,6 +54,9 @@ class log(object):
 	def setOutputFile(self, filename):
 		self.filename = filename
 
+	def setAPIKey(self, key):
+		self.__key__ = key
+
 	def setMySQL(self, host, username, password, database):
 		self.mysql['host'] = host
 		self.mysql['username'] = username
@@ -61,9 +68,16 @@ class log(object):
 			if __LOGTYPE__[types][0] >= self.level:
 				self.__ToConsole__(message, types)
 
+
 		if 'file' in self.method:
 			self.__ToFile__(message, types)
 
+		if 'cloud' in self.method and 'POST' in self.type:
+			if postToCloud(message, self.__key__):
+				pass
+			else:
+				self.lastError = True
+				self.errorMessage = '发送日志时发生错误'
 
 	def __ToConsole__(self, message, types):
 
@@ -80,108 +94,51 @@ class log(object):
 
 		else:
 			with open(self.filename, 'a') as f:
-				f.write(__LOGTYPE__[types][1] + message + '\n')
+				f.write(getLogTime() + __LOGTYPE__[types][1] + message + '\n')
 
 	def __ToMySQL__(self, message, level):
 		print u'当前版本暂不支持数据库'
 
 	def PrintPost(self, threadData):
 		print u'------------------------------------------'
-		print u'\n|作者：' + threadData['author']
-		print u'\n|帖子标题：' + threadData['title']
-		print u'\n|帖子预览：' + threadData['abstract']
-		print u'\n|得分：%f' % threadData['grade']
-		print u'\n-------------------------------------------\n\n'
+		print u'|作者：' + threadData['author']
+		print u'|帖子标题：' + threadData['title']
+		print u'|帖子预览：' + threadData['abstract']
+		print u'|关键词:' + ','.join(threadData['keywords'])
+		print u'|得分：%f' %threadData['grade']
+		print u'-------------------------------------------'
 
 	def __PostToFile__(self, threadData):
 		string = ''\
 			+ '{\n'\
 			+ '    "type" : "' + threadData['operation'] +'",\n'\
 			+ '    "data" : {\n'\
-			+ '        "time" : "' + threadData['time'] + '",\n'\
+			+ '        "time" : "' + threadData['operationTime'] + '",\n'\
+			+ '        "tid" : "' + str(threadData['tid']) + '",\n'\
+			+ '        "pid" : "' + str(threadData['pid']) + '",\n'\
 			+ '        "title" : "' + threadData['title'].encode('utf-8') + '",\n'\
 			+ '        "author" : "' + threadData['author'].encode('utf-8') + '",\n'\
 			+ '        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n'\
+			+ '        "replyNum" : "' + str(threadData['replyNum']) + '",\n'\
+			+ '        "operation" : "' + threadData['operation'] + '",\n'\
+			+ '        "keywords" : "' + ','.join(threadData['keywords']) + '",\n'\
 			+ '    },\n'\
-			+ '    "grade" : ' + str(threadData['grade']) + '\n'\
+			+ '    "grade" : %f'%threadData['grade'] + '\n'\
 			+ '},\n'
 		with open(self.filename, 'a') as f:
 			f.write(string)
 
-	
+	def getLastError(self):
+		if self.lastError:
+			self.lastError = False
+			return True
+		else:
+			return False
+
+def getLogTime():
+	return datetime.now().strftime('%y/%m/%d %H:%M:%S.') + datetime.now().strftime('%f')[:2]
 # test = log('console', 'INFO','SIMPLE')
 # test.log(u'这是普通信息', 'INFO')
 # test.log(u'这是错误信息', 'ERROR')
 # test.log(u'调试信息啊', 'DEBUG')
 # test.log(u'成功啦！！！', 'SUCCESS')
-
-
-# def uniout(str = '', threadData = '', level = 0, method = 'STDOUT'):
-# 	if method == 'STDOUT':
-# 		_stdout(str, level)
-# 	elif method == 'DELETE':
-# 		_delete(threadData)
-# 	elif method == 'BLOCK':
-# 		_block(threadData)
-# 	elif method == 'ERROR':
-# 		_error(str)
-
-# 	return
-
-# def _stdout(str, level):
-# 	_output(str)
-
-# 	return
-
-
-
-# 	_output(str, stream = 'HISTORY')
-
-# 	return
-
-# def _block(threadData):
-# 	str = ''\
-# 		+ '{\n'\
-# 		+ '    "type" : "block",\n'\
-# 		+ '    "data" : {\n'\
-# 		+ '        "time" : "' + time.asctime() + '",\n'\
-# 		+ '        "author" : "' + threadData['author'].encode('utf-8') + '",\n'\
-# 		+ '    }\n'\
-# 		+ '},\n'\
-
-# 	_output(str, stream = 'HISTORY')
-
-# 	return
-
-# def _error(str):
-# 	_output(str, stream = 'ERROR')
-
-# 	return
-
-# def _output(str, stream = 'STDOUT'):
-# 	if stream == 'STDOUT':
-# 		print str
-# 	elif stream == 'HISTORY':
-# 		with open('history.log', 'a') as f:
-# 			f.write(str)
-# 	elif stream == 'ERROR':
-# 		with open('error.log', 'a') as f:
-# 			f.write(str)
-
-# 	return
-
-# def test():
-# 	stdStr = 'this is stdout'
-# 	threadData = {
-# 		'title' : 'title',
-# 		'author' : 'author',
-# 		'abstract' : 'abstract'
-# 	}
-# 	errorStr = 'this is error'
-
-# 	#uniout(stdStr)
-# 	uniout(threadData = threadData, method = 'HISTORY')
-# 	#uniout(threadData = threadData, method = 'BLOCK')
-# 	#uniout(errorStr, method = 'ERROR')
-
-# test()
