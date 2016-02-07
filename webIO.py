@@ -98,12 +98,12 @@ def deleteThread(threadData, forum):
 		'is_vipdel' : '0',
 		'is_finf' : 'false'
 	}
-	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	err_code = json.loads(_decodeGzip(data))['err_code']
+	# data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
+	err_code = 0#json.loads(_decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		threadData['operation'] = 'delete'
-		threadData['time'] = time.strftime(u'%Y年%m月%d日 %H时%M分%S秒',time.localtime())
+		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		return False
@@ -126,7 +126,7 @@ def blockID(threadData, forum):
 
 	if err_code == 0:
 		threadData['operation'] = 'block'
-		threadData['time'] = time.strftime(u'%Y年%m月%d日 %H时%M分%S秒',time.localtime())
+		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		return False
