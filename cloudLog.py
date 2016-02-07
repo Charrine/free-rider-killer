@@ -10,7 +10,6 @@ def postToCloud(threadData, key):
         'pid' : threadData['pid'],
         'replyNum' : threadData['replyNum'],
         'operationTime' : threadData['operationTime'],
-        # 'operation' : threadData['operation'],
         'grade' : threadData['grade'],
         'keywords' : ','.join(threadData['keywords']),
         'operation' : threadData['operation'],
