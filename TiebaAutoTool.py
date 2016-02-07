@@ -174,14 +174,14 @@ def autoDelete():
 
 						
 
-		# except Exception, e:
-		# 	print e
-		# 	logFile = open('error.log', 'a')
-		# 	logFile.write(time.asctime() + '\n')
-		# 	logFile.write(str(e) + '\n\n')
-		# 	logFile.close()
-		# 	time.sleep(10)
-		# else:
+		except Exception, e:
+			print e
+			logFile = open('error.log', 'a')
+			logFile.write(time.asctime() + '\n')
+			logFile.write(str(e) + '\n\n')
+			logFile.close()
+			time.sleep(10)
+		else:
 			if deleteCount != 0:
 				outputLOG.log(u'已检查首页: 已删除{0} 个帖子'.format(deleteCount), 'INFO')
 			elif config['debug']:
@@ -266,7 +266,7 @@ def getUserConfigration():
 	try:
 		with open(config['configFilename'], 'r') as f:
 			jsonObj = json.load(f)
-			print type(jsonObj)
+			# print type(jsonObj)
 			# if all(x in jsonObj for x in ['username', 'password', 'kw', 'apikey'])
 			if 'username' in jsonObj and 'password' in jsonObj and 'kw' in jsonObj and 'apikey' in jsonObj:
 				config['user']['username'] = jsonObj['username'].decode('utf8')
