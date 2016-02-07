@@ -13,21 +13,27 @@ sys.setdefaultencoding( "utf-8" )
 
 config = {}
 
+def compileKeywords(keywords):
+	for i in range(len(keywords)):
+		keywords[i].append(re.compile(keywords[i][0],re.I))
+
 def judge(threadData):
 	titleGrade   = 0
 	previewGrade = 0
 
 	preview = (u'None' if threadData['abstract'] == None else threadData['abstract'])
 	for keyword in keywords:
-		arr = re.findall(keyword[0], threadData['title'])
+		arr = re.findall(keyword[2], threadData['title'])
 		if len(arr):
+			threadData['keywords'].append(keyword[0])
 			titleGrade += len(arr) * keyword[1]
 
-		arr = re.findall(keyword[0], preview)
+		arr = re.findall(keyword[2], preview)
 		if len(arr):
+			threadData['keywords'].append(keyword[0])
 			previewGrade += len(arr) * keyword[1]
 
-	grade = float(titleGrade) / len(threadData['title']) + float(previewGrade) / len(preview) * 1.1
+	grade = float(titleGrade + previewGrade* 1.2) / (len(threadData['title']) + len(preview))
 
 	return grade
 
@@ -39,7 +45,7 @@ def parseArgument():
 	parser.add_argument('workingType', choices = ['run', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
 	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'configFilename', default = 'default.json')
 	parser.add_argument('-d', '--debug' ,     help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
-	parser.add_argument('-v', '--version' ,   help = u'显示版本信息并退出', action = "version", version = '0.1')
+	parser.add_argument('-v', '--version' ,   help = u'显示版本信息并退出', action = "version", version = '1.0')
 	args = parser.parse_args()
 
 	if args.workingType == 'run':
@@ -126,19 +132,28 @@ def autoDelete():
 
 			for threadData in threadDataList:
 				if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-					threadData['grade'] = judge(threadData)
-					if threadData['grade'] > 6:
-						postLOG.PrintPost(threadData)
+					threadData['keywords'] = []
+					threadData['grade'] = float('%.2f'%judge(threadData))
 
+					#only delete posts which has less than 10 replies
+					if threadData['grade'] > 6 and threadData['replyNum'] < 10:
+						
+						postLOG.PrintPost(threadData)
 						if not config['debug']:
 							outputLOG.log(u'正在删除帖子', 'INFO')
 							if deleteThread(threadData, config['forum']):							
-								outputLOG(u'删除成功', 'SUCCESS')
+								outputLOG.log(u'删除成功', 'SUCCESS')
+								outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
 								postLOG.log(threadData)
+
+								if postLOG.getLastError():
+									outputLOG.log(postLOG.errorMessage, 'ERROR')
+
 								deleteCount += 1
 							else:
 								outputLOG.log(u'删除失败', 'ERROR')
 							sleep(5)
+						# in debug mode
 						else:
 							print u'请确认是否删除（按y删除）:',
 							if raw_input() == 'y':
@@ -146,7 +161,11 @@ def autoDelete():
 								outputLOG.log(u'正在删除', 'INFO')
 								if deleteThread(threadData, config['forum']):
 									outputLOG.log(u'删除成功', 'SUCCESS')
+									outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
+									
 									postLOG.log(threadData)
+									if postLOG.getLastError():
+										outputLOG.log(postLOG.errorMessage, 'ERROR')
 									deleteCount += 1
 								else:
 									outputLOG.log(u'删除失败', 'ERROR')
@@ -165,8 +184,8 @@ def autoDelete():
 		# else:
 			if deleteCount != 0:
 				outputLOG.log(u'已检查首页: 已删除{0} 个帖子'.format(deleteCount), 'INFO')
-			else:
-				outputLOG(u'等待更多新帖...', 'INFO')
+			elif config['debug']:
+				outputLOG.log(u'等待更多新帖...', 'INFO')
 				sleep(60)
 			deleteCount = 0
 
@@ -190,8 +209,7 @@ def init():
 	global config
 	global outputLOG
 	global postLOG
-	postLOG = log('file', 'POST')
-	postLOG.setOutputFile('history.log')
+
 	config = {
 		'user' : {
 			'username' : 'username',
@@ -227,19 +245,29 @@ def init():
 		outputLOG.log(u'获取关键词中', 'INFO')
 		getKeywords()
 		outputLOG.log(u'获取关键词成功', 'SUCCESS')
+		outputLOG.log(u'编译关键词中...', 'INFO')
+		compileKeywords(keywords)
+		outputLOG.log(u'编译成功', 'INFO')
+
 		outputLOG.log(u'获取配置文件：%s ...' %config['configFilename'], 'INFO')
 		getUserConfigration()
 		outputLOG.log(u'获取贴吧fid', 'DEBUG')
 		config['forum']['fid'] = getFid(config['forum'])
 		outputLOG.log(u'使用用户名： ' + config['user']['username'], 'INFO')
 		outputLOG.log(u'管理贴吧： ' + config['forum']['kw'] + u'(' + config['forum']['fid'] + u')', 'INFO')
-	outputLOG.log(u'初始化完毕', 'SUCCESS')
+
+		postLOG = log(('file', 'cloud'), 'POST', key = config['apikey'])
+		postLOG.setOutputFile('history.log')
+		outputLOG.log(u'使用apikey:' + config['apikey'])
+		outputLOG.log(u'初始化完毕', 'SUCCESS')
 	return
 
 def getUserConfigration():
 	try:
 		with open(config['configFilename'], 'r') as f:
 			jsonObj = json.load(f)
+			print type(jsonObj)
+			# if all(x in jsonObj for x in ['username', 'password', 'kw', 'apikey'])
 			if 'username' in jsonObj and 'password' in jsonObj and 'kw' in jsonObj and 'apikey' in jsonObj:
 				config['user']['username'] = jsonObj['username'].decode('utf8')
 				config['user']['password'] = jsonObj['password'].decode('utf8')

@@ -104,6 +104,7 @@ class log(object):
 		print u'|作者：' + threadData['author']
 		print u'|帖子标题：' + threadData['title']
 		print u'|帖子预览：' + threadData['abstract']
+		print u'|回复数：' + str(threadData['replyNum'])
 		print u'|关键词:' + ','.join(threadData['keywords'])
 		print u'|得分：%f' %threadData['grade']
 		print u'-------------------------------------------'

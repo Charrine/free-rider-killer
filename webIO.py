@@ -98,8 +98,8 @@ def deleteThread(threadData, forum):
 		'is_vipdel' : '0',
 		'is_finf' : 'false'
 	}
-	# data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	err_code = 0#json.loads(_decodeGzip(data))['err_code']
+	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
+	err_code = json.loads(_decodeGzip(data))['err_code']
 
 	if err_code == 0:
 		threadData['operation'] = 'delete'
