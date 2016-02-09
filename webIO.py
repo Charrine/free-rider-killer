@@ -19,6 +19,7 @@ def adminLogin(user, filename = ''):
 		postdata = {
 			'token' : _getToken(),
 			'tpl' : 'pp',
+			'mem_pass' : 'on',
 			'username' : user['username'],
 			'password' : user['password'],
 		}
