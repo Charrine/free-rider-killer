@@ -12,7 +12,9 @@
 
 ##使用方法
 `python2 TiebaAutoTool.py run`
+请使用-h参数来查看帮助
 
 ----------
 
-更多信息，请使用-h参数来查看帮助
+##更多信息
+http://yangwang.hk/?p=666
