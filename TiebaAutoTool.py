@@ -31,7 +31,7 @@ def judge(threadData):
 			threadData['keywords'].append(keyword[0])
 			previewGrade += len(arr) * keyword[1]
 
-	grade = float(titleGrade + previewGrade* 1.2) / (len(threadData['title']) + len(preview))
+	grade = float(titleGrade) *0.8 / (len(threadData['title']) + len(preview) * 0.5) + float(previewGrade) * 1.2 / len(preview)
 
 	return grade
 
@@ -43,7 +43,7 @@ def parseArgument():
 	parser.add_argument('workingType', choices = ['run', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
 	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'configFilename', default = 'default.json')
 	parser.add_argument('-d', '--debug' ,     help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
-	parser.add_argument('-v', '--version' ,   help = u'显示版本信息并退出', action = "version", version = '1.0')
+	parser.add_argument('-v', '--version' ,   help = u'显示此版本信息并退出', action = "version", version = '1.0')
 	args = parser.parse_args()
 
 	if args.workingType == 'run':
@@ -277,7 +277,6 @@ def getUserConfigration():
 	except Exception as e:
 		print u'无法得到 config，文件可能不存在或者格式可能不对'
 		sys.exit(1)
-
 	return
 
 def getKeywords():
