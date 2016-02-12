@@ -9,3 +9,6 @@ log.log
 *.co
 
 *.pyc
+
+#keywords
+keyword.txt
