@@ -2,13 +2,15 @@
 history.log
 error.log
 log.log
+
 #config file
 *.json
 
 #cookie file
 *.co
 
+#python file
 *.pyc
 
-#keywords
+#keyword file
 keywords.txt

@@ -5,9 +5,9 @@ import os
 import re
 import sys
 import time
-from bar import *
-from webIO import *
-from log import log
+from lib.bar import *
+from lib.webIO import *
+from lib.log import log
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
@@ -41,7 +41,7 @@ def parseArgument():
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument('workingType', choices = ['run', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
-	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为default.json', dest = 'configFilename', default = 'default.json')
+	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为config/default.json', dest = 'configFilename', default = 'config/default.json')
 	parser.add_argument('-d', '--debug' ,     help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v', '--version' ,   help = u'显示此版本信息并退出', action = "version", version = '1.0')
 	args = parser.parse_args()
@@ -60,9 +60,10 @@ def configFileGenerator():
 	print u'请输入配置文件的文件名（按回车使用默认文件）: ',
 	filename = raw_input()
 	if filename == '':
-		filename = 'default.json'
-		print u'使用默认配置文件default.json'
+		filename = 'config/default.json'
+		print u'使用默认配置文件config/default.json'
 	else:
+		filename = 'config/' + filename
 		print u'-----将使用: %s-----' % filename
 
 	if os.path.exists(filename):
@@ -174,7 +175,7 @@ def autoDelete():
 
 		except Exception, e:
 			print e
-			logFile = open('error.log', 'a')
+			logFile = open('log/error.log', 'a')
 			logFile.write(time.asctime() + '\n')
 			logFile.write(str(e) + '\n\n')
 			logFile.close()
@@ -219,12 +220,12 @@ def init():
 		},
 		'debug' : False,
 		'workingType' : 'autoTool',
-		'configFilename' : 'default.json',
+		'configFilename' : 'config/default.json',
 		'stdincoding' : 'utf8',
 		'loglevel':'DEFAULT'
 	}
 	outputLOG = log(['console', 'file'], 'STRING', config['loglevel'])
-	outputLOG.setOutputFile('log.log')
+	outputLOG.setOutputFile('config/log.log')
 	parseArgument()
 	if config['debug']:
 		outputLOG.setLevel('DEBUG')
@@ -255,7 +256,7 @@ def init():
 		outputLOG.log(u'管理贴吧： ' + config['forum']['kw'] + u'(' + config['forum']['fid'] + u')', 'INFO')
 
 		postLOG = log(('file', 'cloud'), 'POST', key = config['apikey'])
-		postLOG.setOutputFile('history.log')
+		postLOG.setOutputFile('log/history.log')
 		outputLOG.log(u'使用apikey:' + config['apikey'])
 		outputLOG.log(u'初始化完毕', 'SUCCESS')
 	return
@@ -282,7 +283,7 @@ def getUserConfigration():
 def getKeywords():
 	global keywords
 	try:
-		with open('keywords.txt', 'r') as f:
+		with open('config/keywords.txt', 'r') as f:
 			keywords = eval(f.read().decode('utf8'))
 	except Exception as e:
 		outputLOG.log(u'无法得到 keywords，文件可能不存在或者格式可能不对', 'ERROR')
