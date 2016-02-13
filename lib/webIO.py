@@ -24,7 +24,7 @@ def adminLogin(user, filename = ''):
 			'password' : user['password'],
 		}
 		data = _genericPost('https://passport.baidu.com/v2/api/?login', postdata)
-		err_code = re.search(r'error=(?P<err_code>\d+)', data).group('err_code')
+		err_code = int(re.search(r'error=(?P<err_code>\d+)', data).group('err_code'))
 
 		if err_code == 0:
 			if filename:
