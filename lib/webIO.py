@@ -23,12 +23,19 @@ def adminLogin(user, filename = ''):
 			'username' : user['username'],
 			'password' : user['password'],
 		}
-		_genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+		data = _genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+		err_code = re.search(r'error=(?P<err_code>\d+)', data).group('err_code')
 
-		if isLogined():
+		if err_code == 0:
 			if filename:
 				saveCookie(filename)
 			return True
+		elif err_code == 257:
+			print 'need verify code'
+			sys.exit()
+		elif err_code == 4:
+			print 'wrong username or password'
+			sys.exit()
 		else:
 			return False
 
@@ -151,7 +158,7 @@ def _genericPost(url, postdata):
 	request.add_header('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36')
 	request.add_header('Content-Type','application/x-www-form-urlencoded')
 
-	return _genericGet(request)
+	return _decodeGzip(_genericGet(request))
 
 def _genericGet(url):
 	connection = urllib2.urlopen(url, timeout = 10)
@@ -161,13 +168,17 @@ def _genericGet(url):
 	return data
 
 def _decodeGzip(data):
-	fileObj = StringIO.StringIO(data)
-	gzipObj = gzip.GzipFile(fileobj = fileObj)
-	gzipData = gzipObj.read()
-	fileObj.close()
-	gzipObj.close()
+	try:
+		fileObj = StringIO.StringIO(data)
+		gzipObj = gzip.GzipFile(fileobj = fileObj)
+		data = gzipObj.read()
+	except IOError, e:
+		pass
+	finally:
+		fileObj.close()
+		gzipObj.close()
 
-	return gzipData
+	return data
 
 def _getTbs():
 	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
