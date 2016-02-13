@@ -115,10 +115,9 @@ def getThreadDataList(forum):
 
 
 def isLogined():
-	if 'BDUSS' in str(_cj):
-		return True
-	else:
-		return False
+	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
+
+	return True if json.loads(data)['is_login'] == 1 else False;
 
 def webIOInitialization(filename):
 	global _cj
