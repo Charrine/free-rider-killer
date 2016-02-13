@@ -1,35 +1,15 @@
 # -*- coding: utf8 -*-
 import getpass
 import os
-import re
 import sys
 import time
 from lib.bar import *
 from lib.webIO import *
 from lib.initialization import initialization
+from lib.judge import judge
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-
-def judge(threadData):
-	titleGrade   = 0
-	previewGrade = 0
-
-	preview = (u'None' if threadData['abstract'] == None else threadData['abstract'])
-	for keyword in keywords:
-		arr = re.findall(keyword[2], threadData['title'])
-		if len(arr):
-			threadData['keywords'].append(keyword[0])
-			titleGrade += len(arr) * keyword[1]
-
-		arr = re.findall(keyword[2], preview)
-		if len(arr):
-			threadData['keywords'].append(keyword[0])
-			previewGrade += len(arr) * keyword[1]
-
-	grade = float(titleGrade) *0.8 / (len(threadData['title']) + len(preview) * 0.5) + float(previewGrade) * 1.2 / len(preview)
-
-	return grade
 
 def configFileGenerator():
 	print u'请输入配置文件的文件名（按回车使用默认文件）: ',
@@ -107,7 +87,7 @@ def autoDelete():
 			for threadData in threadDataList:
 				if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
 					threadData['keywords'] = []
-					threadData['grade'] = float('%.2f'%judge(threadData))
+					threadData['grade'] = float('%.2f'%judge(threadData, keywords))
 
 					#only delete posts which has less than 10 replies
 					if threadData['grade'] > 6 and threadData['replyNum'] < 10:
