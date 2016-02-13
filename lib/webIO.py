@@ -160,11 +160,22 @@ def _genericPost(url, postdata):
 	return _decodeGzip(_genericGet(request))
 
 def _genericGet(url):
-	connection = urllib2.urlopen(url, timeout = 10)
-	data = connection.read()
-	connection.close()
+	i = 0
+	while i < 10:
+		i += 1
+		try:
+			connection = urllib2.urlopen(url, timeout = 10)
+		except Exception as e:
+			#TODO: log request: internet error.Retry
+			sys.sleep(i ** 2)
+		else:
+			if connection.getcode() == 200:
+				return connection.read()
+			else:
+				sys.sleep(i ** 2)
 
-	return data
+	#TODO: log request: internet error
+	sys.exit()
 
 def _decodeGzip(data):
 	try:
