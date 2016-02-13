@@ -33,9 +33,11 @@ def adminLogin(user, filename = ''):
 				_cj.save(filename, True)
 			return True
 		elif err_code == 257:
+			#TODO: log request
 			print 'need verify code'
 			sys.exit()
 		elif err_code == 4:
+			#TODO: log request
 			print 'wrong username or password'
 			sys.exit()
 		else:
@@ -54,18 +56,17 @@ def deleteThread(threadData, forum):
 		'is_finf' : 'false'
 	}
 	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	err_code = json.loads(_decodeGzip(data))['err_code']
+	data = json.loads(_decodeGzip(data))
 
-	if err_code == 0:
+	if data['err_code'] == 0:
 		threadData['operation'] = 'delete'
 		threadData['operationTime'] = getLogTime()
 		return True
 	else:
+		#TODO: log request save data
 		return False
 
-def blockID(threadData, forum):
-	print '--- Blocking ---'
-
+def blockID(threadData, forum, reason = ''):
 	constantPid = '82459413573'
 	postdata = {
 		'tbs' : _getTbs(),
@@ -73,17 +74,19 @@ def blockID(threadData, forum):
 		'user_name[]' : threadData['author'],
 		'pids[]' : constantPid,
 		'day' : '1',
-		'ie' : 'utf-8',
-		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
+		'ie' : 'utf-8'
 	}
+	if not reason:
+		postdata['reason'] = '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
-	err_code = json.loads(_decodeGzip(data))['err_code']
+	data = json.loads(_decodeGzip(data))
 
-	if err_code == 0:
+	if data['err_code'] == 0:
 		threadData['operation'] = 'block'
 		threadData['operationTime'] = getLogTime()
 		return True
 	else:
+		#TODO: log request save data
 		return False
 
 def getThreadDataList(forum):
