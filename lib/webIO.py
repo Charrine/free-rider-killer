@@ -12,6 +12,8 @@ import urllib2
 
 from log import *
 
+_cj = None
+
 def adminLogin(user, filename = ''):
 	if isLogined():
 		return True
@@ -28,7 +30,7 @@ def adminLogin(user, filename = ''):
 
 		if err_code == 0:
 			if filename:
-				saveCookie(filename)
+				_cj.save(filename, True)
 			return True
 		elif err_code == 257:
 			print 'need verify code'
@@ -126,17 +128,7 @@ def webIOInitialization(filename):
 	urllib2.install_opener(opener)
 
 	if os.path.exists(filename):
-		loadCookie(filename)
-
-	return
-
-def loadCookie(filename):
-	_cj.load(filename, True)
-
-	return
-
-def saveCookie(filename):
-	_cj.save(filename, True)
+		_cj.load(filename, True)
 
 	return
 
