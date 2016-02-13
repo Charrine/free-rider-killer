@@ -142,10 +142,8 @@ def saveCookie(filename):
 
 def getFid(forum):
 	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
-	s = re.search(r'"forum_info":{"forum_id":\d*,', data)
-	m = re.match(r'"forum_info":{"forum_id":(?P<fid>\d*),', s.group())
 
-	return m.groupdict()['fid']
+	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
 
 #Local function
 
