@@ -13,7 +13,7 @@ def initialization():
 	global outputLOG
 
 	outputLOG = log(['console', 'file'], 'STRING', 'DEFAULT')
-	outputLOG.setOutputFile('config/console.log')
+	outputLOG.setOutputFile('log/console.log')
 
 	outputLOG.log(u'初始化中...', 'INFO')
 
