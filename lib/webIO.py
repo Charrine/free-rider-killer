@@ -11,7 +11,8 @@ import time
 import urllib
 import urllib2
 
-from log import getLogTime
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 _cj = None
 
@@ -113,28 +114,36 @@ def getThreadDataList(forum):
 	threadList = html.select('.j_thread_list')
 	topThreadNum = len(html.select('.thread_top'))
 
-	threadDataList = []
-	for thread in threadList[topThreadNum:]:
-		dataField = json.loads(thread['data-field'])
-		threadData = {
-			'thread' : {
-				'title' : thread.select('a.j_th_tit')[0].string,
-				'abstract' : str(thread.select('div.threadlist_abs')[0].string).decode('utf-8'),
-				'tid' : dataField['id'],
-				'pid' : dataField['first_post_id'],
-				'goodThread' : dataField['is_good'],
-				'topThread' : dataField['is_top'],
-				'replyNum' : dataField['reply_num']
-			},
-			'author' : {
-				'userName' : dataField['author_name']
-			}
-		}
-		_getThreadDetail(threadData)
-		print threadData['thread']
-		threadDataList.append(threadData)
+	#multiprocessing spend 01:06
+	pool = ThreadPool()
+	threadDataList = pool.map(_parseThreadData, threadList[topThreadNum:])
+
+	#single processing spend 01:27
+	#threadDataList = []
+	#for thread in threadList[topThreadNum:]:
+	#	threadDataList.append(_parseThreadData(thread))
 
 	return threadDataList
+
+def _parseThreadData(thread):
+	dataField = json.loads(thread['data-field'])
+	threadData = {
+		'thread' : {
+			'title' : thread.select('a.j_th_tit')[0].string,
+			'abstract' : str(thread.select('div.threadlist_abs')[0].string).decode('utf-8'),
+			'tid' : dataField['id'],
+			'pid' : dataField['first_post_id'],
+			'goodThread' : dataField['is_good'],
+			'topThread' : dataField['is_top'],
+			'replyNum' : dataField['reply_num']
+		},
+		'author' : {
+			'userName' : dataField['author_name']
+		}
+	}
+	_getThreadDetail(threadData)
+
+	return threadData
 
 def _getThreadDetail(threadData):
 	data = _genericGet('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
