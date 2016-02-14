@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 import getpass
 import os
+import sys
 
 from lib.webIO import adminLogin
 
@@ -45,13 +46,16 @@ def configFileGenerator(config):
 	print u'请输入贴吧名（不带‘吧’，如c语言吧则输入‘c语言’）：',
 	config['forum']['kw'] = raw_input().decode(config['stdincoding'])
 
-	print u'请输入API key：',
+	print u'请输入API key：(若没有请按回车)',
 	config['apikey'] = raw_input()
 
-	print u'-----------------\n请检查输入的信息是否正确'
-	print u'使用用户名：{0}\n密码：{1}\n管理贴吧：{2}'.format(config['user']['username'],\
-		'*' * len(config['user']['password']), config['forum']['kw'])
-	print 'API key：' + config['apikey']
+	print u'-----------------'
+	print u'请检查输入的信息是否正确'
+	print u'使用用户名：' + config['user']['username']
+	print u'密码：' + '*' * len(config['user']['password'])
+	print u'管理贴吧：' + config['forum']['kw']
+	if config['apikey']:
+		print u'API key：' + config['apikey']
 	print u'输入yes将会写入用户配置文件：'
 	inputs = raw_input()
 
@@ -64,6 +68,9 @@ def configFileGenerator(config):
 			configfile.write('	"apikey" : "' + config['apikey'] + '"\n')
 			configfile.write('}')
 		print u'-----写入成功-----'
-		print u'请使用python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % filename
+		if filename == 'config/default.json':
+			print u'请使用 python2 TiebaAutoTool.py run 来使用本配置运行'
+		else:
+			print u'请使用 python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % filename
 	else:
 		print u'已取消，未做任何更改'

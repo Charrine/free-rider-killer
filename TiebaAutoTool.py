@@ -85,7 +85,7 @@ def main():
 	if config['workingType'] == 'config':
 		configFileGenerator(config)
 	elif config['workingType'] == 'autoTool':
-		isLogined = adminLogin(cinitializationonfig['user'], config['configFilename'][:-5] + '.co')
+		isLogined = adminLogin(config['user'], config['configFilename'][:-5] + '.co')
 		if isLogined:
 			outputLOG.log(u'登陆成功', 'SUCCESS')
 			autoDelete()
