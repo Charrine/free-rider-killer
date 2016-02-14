@@ -62,13 +62,13 @@ def isLogined():
 
 	return True if json.loads(data)['is_login'] == 1 else False;
 
-def deleteThread(threadData, forum):
+def deleteThread(thread, forum):
 	postdata = {
 		'tbs' : _getTbs(),
 		'kw' : forum['kw'],
 		'fid' : forum['fid'],
-		'tid' : threadData['tid'],
-		'pid' : threadData['pid'],
+		'tid' : thread['tid'],
+		'pid' : thread['pid'],
 		'commit_fr' : 'pb',
 		'ie' : 'utf-8',
 		'is_vipdel' : '0',
@@ -77,8 +77,6 @@ def deleteThread(threadData, forum):
 	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
 
 	if data['err_code'] == 0:
-		threadData['operation'] = 'delete'
-		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		#TODO: log request save data
@@ -99,8 +97,6 @@ def blockID(author, forum, reason = ''):
 	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
 
 	if data['err_code'] == 0:
-		threadData['operation'] = 'block'
-		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		#TODO: log request save data
