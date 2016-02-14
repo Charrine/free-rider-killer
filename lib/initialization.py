@@ -25,6 +25,8 @@ def initialization():
 	webIOInitialization(config['configFilename'][:-5] + '.co')
 	outputLOG.log(u'网络初始化完毕', 'SUCCESS')
 
+	keywords = []
+	postLOG = None
 	if config['workingType'] == 'autoTool':
 		outputLOG.log(u'关键词初始化中...', 'INFO')
 		keywords = _initKeywords()
@@ -113,7 +115,7 @@ def _compileKeywords(keywords):
 		keywords[i].append(re.compile(keywords[i][0], re.I))
 
 def _initUserConfigration(config):
-	outputLOG.log(u'用户配置文件： %s' % config['configFilename'], 'INFO')
+	outputLOG.log(u'用户配置文件：%s' % config['configFilename'], 'INFO')
 	_getUserConfigration(config)
 	outputLOG.log(u'获取用户配置文件成功', 'SUCCESS')
 	config['forum']['fid'] = getFid(config['forum'])
