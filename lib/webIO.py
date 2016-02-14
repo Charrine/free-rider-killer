@@ -127,6 +127,7 @@ def getThreadDataList(forum):
 			},
 			'author' : {
 				'userName' : dataField['author_name']
+			}
 		}
 		threadDataList.append(threadData)
 
