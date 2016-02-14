@@ -4,7 +4,7 @@ import json
 import re
 import sys
 
-from webIO import webIOInitialization, getFid
+from baiduOperation import webIOInitialization, getFid
 from log import log
 
 outputLOG = None

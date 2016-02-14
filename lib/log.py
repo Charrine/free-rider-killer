@@ -3,7 +3,7 @@ import sys
 import time
 import colorama
 from datetime import datetime
-from cloudLog import *
+from cloudLog import postToCloud
 
 
 __LOGLEVEL__ = {

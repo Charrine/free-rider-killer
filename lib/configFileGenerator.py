@@ -3,7 +3,7 @@ import getpass
 import os
 import sys
 
-from lib.webIO import adminLogin
+from baiduOperation import adminLogin
 
 def configFileGenerator(config):
 	print u'请输入配置文件的文件名（按回车使用默认文件）：',
