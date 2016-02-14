@@ -5,6 +5,7 @@ import gzip
 import json
 import os
 import re
+import sys
 import StringIO
 import time
 import urllib
@@ -118,7 +119,7 @@ def getThreadDataList(forum):
 		threadData = {
 			'thread' : {
 				'title' : thread.select('a.j_th_tit')[0].string,
-				'abstract' : str(thread.select('div.threadlist_abs')[0].string),
+				'abstract' : str(thread.select('div.threadlist_abs')[0].string).decode('utf-8'),
 				'tid' : dataField['id'],
 				'pid' : dataField['first_post_id'],
 				'goodThread' : dataField['is_good'],
@@ -129,9 +130,18 @@ def getThreadDataList(forum):
 				'userName' : dataField['author_name']
 			}
 		}
+		_getThreadDetail(threadData))
 		threadDataList.append(threadData)
 
 	return threadDataList
+
+def _getThreadDetail(threadData):
+	data = _genericGet('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
+	data = bs4.BeautifulSoup(data, 'html5lib')
+	dataField = json.loads(data.select('.l_post')[0]['data-field'])
+	threadData['author']['userId'] = dataField['author']['user_id']
+	threadData['author']['userLevel'] = dataField['author']['level_id']
+	threadData['thread']['threadDate'] = dataField['content']['date']
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
