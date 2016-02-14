@@ -10,7 +10,23 @@ import time
 import urllib
 import urllib2
 
-from log import *
+from log import getLogTime
+
+_cj = None
+
+def webIOInitialization(filename):
+	global _cj
+	_cj = cookielib.MozillaCookieJar()
+	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
+	urllib2.install_opener(opener)
+
+	if os.path.exists(filename):
+		_cj.load(filename, True)
+
+def getFid(forum):
+	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
+
+	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
 
 def adminLogin(user, filename = ''):
 	if isLogined():
@@ -23,14 +39,28 @@ def adminLogin(user, filename = ''):
 			'username' : user['username'],
 			'password' : user['password'],
 		}
-		_genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+		data = _genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+		err_code = int(re.search(r'error=(?P<err_code>\d+)', data).group('err_code'))
 
-		if isLogined():
+		if err_code == 0:
 			if filename:
-				saveCookie(filename)
+				_cj.save(filename, True)
 			return True
+		elif err_code == 257:
+			#TODO: log request
+			print 'need verify code'
+			sys.exit()
+		elif err_code == 4:
+			#TODO: log request
+			print 'wrong username or password'
+			sys.exit()
 		else:
 			return False
+
+def isLogined():
+	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
+
+	return True if json.loads(data)['is_login'] == 1 else False;
 
 def deleteThread(threadData, forum):
 	postdata = {
@@ -45,36 +75,35 @@ def deleteThread(threadData, forum):
 		'is_finf' : 'false'
 	}
 	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	err_code = json.loads(_decodeGzip(data))['err_code']
 
-	if err_code == 0:
+	if data['err_code'] == 0:
 		threadData['operation'] = 'delete'
 		threadData['operationTime'] = getLogTime()
 		return True
 	else:
+		#TODO: log request save data
 		return False
 
-def blockID(threadData, forum):
-	print '--- Blocking ---'
-
+def blockID(author, forum, reason = ''):
 	constantPid = '82459413573'
 	postdata = {
 		'tbs' : _getTbs(),
 		'fid' : forum['fid'],
-		'user_name[]' : threadData['author'],
+		'user_name[]' : author,
 		'pids[]' : constantPid,
 		'day' : '1',
-		'ie' : 'utf-8',
-		'reason' : '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
+		'ie' : 'utf-8'
 	}
+	if not reason:
+		postdata['reason'] = '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
-	err_code = json.loads(_decodeGzip(data))['err_code']
 
-	if err_code == 0:
+	if data['err_code'] == 0:
 		threadData['operation'] = 'block'
 		threadData['operationTime'] = getLogTime()
 		return True
 	else:
+		#TODO: log request save data
 		return False
 
 def getThreadDataList(forum):
@@ -83,9 +112,9 @@ def getThreadDataList(forum):
 	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶),
 	# there will be a error occured when you trying to print threadData['abstract'] to console
 	html = data.decode('utf8').encode('gbk','replace').decode('gbk')
-	soup = bs4.BeautifulSoup(html, 'html5lib')
-	threadList = soup.select('.j_thread_list')
-	topThreadNum = len(soup.select('.thread_top'))
+	html = bs4.BeautifulSoup(html, 'html5lib')
+	threadList = html.select('.j_thread_list')
+	topThreadNum = len(html.select('.thread_top'))
 
 	threadDataList = []
 	for thread in threadList[topThreadNum:]:
@@ -93,55 +122,16 @@ def getThreadDataList(forum):
 		threadData = {
 			'title' : thread.select('a.j_th_tit')[0].string,
 			'author' : dataField['author_name'],
-			'abstract' : thread.select('div.threadlist_abs')[0].string,
+			'abstract' : str(thread.select('div.threadlist_abs')[0].string),
 			'tid' : dataField['id'],
 			'pid' : dataField['first_post_id'],
 			'goodThread' : dataField['is_good'],
 			'topThread' : dataField['is_top'],
 			'replyNum' : dataField['reply_num']
 		}
-		#threadData['abstract'] maybe None, and this may cause a lot of problems!!!
-		threadData['abstract'] = (u'None' if threadData['abstract'] == None else threadData['abstract'])
 		threadDataList.append(threadData)
 
 	return threadDataList
-
-
-def isLogined():
-	if 'BDUSS' in str(_cj):
-		return True
-	else:
-		return False
-
-def webIOInitialization(filename):
-	global _cj
-	_cj = cookielib.MozillaCookieJar()
-	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
-	urllib2.install_opener(opener)
-
-	if os.path.exists(filename):
-		loadCookie(filename)
-
-	return
-
-def loadCookie(filename):
-	_cj.load(filename, True)
-
-	return
-
-def saveCookie(filename):
-	_cj.save(filename, True)
-
-	return
-
-def getFid(forum):
-	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
-	s = re.search(r'"forum_info":{"forum_id":\d*,', data)
-	m = re.match(r'"forum_info":{"forum_id":(?P<fid>\d*),', s.group())
-
-	return m.groupdict()['fid']
-
-#Local function
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
@@ -151,23 +141,38 @@ def _genericPost(url, postdata):
 	request.add_header('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36')
 	request.add_header('Content-Type','application/x-www-form-urlencoded')
 
-	return _genericGet(request)
+	return _decodeGzip(_genericGet(request))
 
 def _genericGet(url):
-	connection = urllib2.urlopen(url, timeout = 10)
-	data = connection.read()
-	connection.close()
+	i = 0
+	while i < 10:
+		i += 1
+		try:
+			connection = urllib2.urlopen(url, timeout = 10)
+		except Exception as e:
+			#TODO: log request: internet error.Retry
+			sys.sleep(i ** 2)
+		else:
+			if connection.getcode() == 200:
+				return connection.read()
+			else:
+				sys.sleep(i ** 2)
 
-	return data
+	#TODO: log request: internet error
+	sys.exit()
 
 def _decodeGzip(data):
-	fileObj = StringIO.StringIO(data)
-	gzipObj = gzip.GzipFile(fileobj = fileObj)
-	gzipData = gzipObj.read()
-	fileObj.close()
-	gzipObj.close()
+	try:
+		fileObj = StringIO.StringIO(data)
+		gzipObj = gzip.GzipFile(fileobj = fileObj)
+		data = gzipObj.read()
+	except IOError, e:
+		pass
+	finally:
+		fileObj.close()
+		gzipObj.close()
 
-	return gzipData
+	return data
 
 def _getTbs():
 	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
