@@ -130,7 +130,8 @@ def getThreadDataList(forum):
 				'userName' : dataField['author_name']
 			}
 		}
-		_getThreadDetail(threadData))
+		_getThreadDetail(threadData)
+		print threadData['thread']
 		threadDataList.append(threadData)
 
 	return threadDataList
@@ -142,6 +143,7 @@ def _getThreadDetail(threadData):
 	threadData['author']['userId'] = dataField['author']['user_id']
 	threadData['author']['userLevel'] = dataField['author']['level_id']
 	threadData['thread']['threadDate'] = dataField['content']['date']
+	threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
