@@ -29,7 +29,6 @@ def autoDelete():
 		try:
 			outputLOG.log(u'获取首页...', 'INFO')
 			threadDataList = getThreadDataList(config['forum'])
-
 			for threadData in threadDataList:
 				deleteCount += _analyzeThread(threadData)
 		except Exception, e:
@@ -42,7 +41,7 @@ def autoDelete():
 		else:
 			if deleteCount != 0:
 				outputLOG.log(u'删除 {0} 个帖子'.format(deleteCount), 'INFO')
-			elif not config['debug']:
+			else:
 				outputLOG.log(u'等待更多新帖...', 'INFO')
 				sleep(60)
 			deleteCount = 0
@@ -63,7 +62,7 @@ def _analyzeThread(threadData):
 					return _deleteThread(threadData)
 				else:
 					outputLOG.log(u'跳过删帖', 'DEBUG')
-					return 0
+	return 0
 
 def _deleteThread(threadData):
 	outputLOG.log(u'正在删除帖子', 'INFO')
