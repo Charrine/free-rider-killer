@@ -31,7 +31,7 @@ class log(object):
 					'cloud' if you want to stored logs on a cloud, you should use this value
 					'mysql' you can use mysql to save your logs if you have a mysql server on localhost or on a remote server
 			logtype specify the log's type, you can you 'POST' or 'STRING'
-				'STRING' 
+				'STRING'
 				"""
 		self.method = logmethod
 		self.level = __LOGLEVEL__[level]
@@ -45,7 +45,7 @@ class log(object):
 		"""This function will set log level
 
 				You may use 'DEBUG', 'DEFAULT' or 'SIMPLE' to define which type of log will be displaied or stored
-				'DEBUG' level is the highest log level which means it will recoder everything happened in this program, 
+				'DEBUG' level is the highest log level which means it will recoder everything happened in this program,
 					so it may help you debug
 					Once you use -d to enable debug mod, this log level should be set by default and conldn't be modified
 				'DEFAULT' level will be set when you run this program without using debug mode"""
@@ -101,30 +101,30 @@ class log(object):
 
 	def PrintPost(self, threadData):
 		print u'------------------------------------------'
-		print u'|作者：' + threadData['author']
-		print u'|帖子标题：' + threadData['title']
-		print u'|帖子预览：' + threadData['abstract']
-		print u'|回复数：' + str(threadData['replyNum'])
-		print u'|关键词:' + ','.join(threadData['keywords'])
-		print u'|得分：%f' %threadData['grade']
+		print u'|作者：' + threadData['author']['userName']
+		print u'|帖子标题：' + threadData['thread']['title']
+		print u'|帖子预览：' + threadData['thread']['abstract']
+		print u'|回复数：' + str(threadData['thread']['replyNum'])
+		print u'|关键词:' + ','.join(threadData['thread']['keywords'])
+		print u'|得分：%f' %threadData['thread']['grade']
 		print u'-------------------------------------------'
 
 	def __PostToFile__(self, threadData):
 		string = ''\
 			+ '{\n'\
-			+ '    "type" : "' + threadData['operation'] +'",\n'\
+			+ '    "type" : "' + threadData['operation']['operation'] +'",\n'\
 			+ '    "data" : {\n'\
-			+ '        "time" : "' + threadData['operationTime'] + '",\n'\
-			+ '        "tid" : "' + str(threadData['tid']) + '",\n'\
-			+ '        "pid" : "' + str(threadData['pid']) + '",\n'\
-			+ '        "title" : "' + threadData['title'].encode('utf-8') + '",\n'\
-			+ '        "author" : "' + threadData['author'].encode('utf-8') + '",\n'\
-			+ '        "abstract" : "' + threadData['abstract'].encode('utf-8') + '",\n'\
-			+ '        "replyNum" : "' + str(threadData['replyNum']) + '",\n'\
-			+ '        "operation" : "' + threadData['operation'] + '",\n'\
-			+ '        "keywords" : "' + ','.join(threadData['keywords']) + '",\n'\
+			+ '        "time" : "' + threadData['operation']['operationTime'] + '",\n'\
+			+ '        "tid" : "' + str(threadData['thread']['tid']) + '",\n'\
+			+ '        "pid" : "' + str(threadData['thread']['pid']) + '",\n'\
+			+ '        "title" : "' + threadData['thread']['title'].encode('utf-8') + '",\n'\
+			+ '        "author" : "' + threadData['author']['userName'].encode('utf-8') + '",\n'\
+			+ '        "abstract" : "' + threadData['thread']['abstract'].encode('utf-8') + '",\n'\
+			+ '        "replyNum" : "' + str(threadData['thread']['replyNum']) + '",\n'\
+			+ '        "operation" : "' + threadData['operation']['operation'] + '",\n'\
+			+ '        "keywords" : "' + ','.join(threadData['thread']['keywords']) + '",\n'\
 			+ '    },\n'\
-			+ '    "grade" : %f'%threadData['grade'] + '\n'\
+			+ '    "grade" : %f'%threadData['thread']['grade'] + '\n'\
 			+ '},\n'
 		with open(self.filename, 'a') as f:
 			f.write(string)

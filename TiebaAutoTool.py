@@ -85,19 +85,20 @@ def autoDelete():
 			threadDataList = getThreadDataList(config['forum'])
 
 			for threadData in threadDataList:
-				if threadData['goodThread'] == 0 and threadData['topThread'] == 0:
-					threadData['keywords'] = []
-					threadData['grade'] = float('%.2f'%judge(threadData, keywords))
+				if threadData['thread']['goodThread'] == 0 and threadData['thread']['topThread'] == 0:
+					judge(threadData, keywords)
 
 					#only delete posts which has less than 10 replies
-					if threadData['grade'] > 6 and threadData['replyNum'] < 10:
+					if threadData['thread']['grade'] > 6 and threadData['thread']['replyNum'] < 10:
 
 						postLOG.PrintPost(threadData)
 						if not config['debug']:
 							outputLOG.log(u'正在删除帖子', 'INFO')
 							if deleteThread(threadData, config['forum']):
+								threadData['operation']['operation'] = 'delete'
+								threadData['operation']['operationTime'] = getLogTime()
 								outputLOG.log(u'删除成功', 'SUCCESS')
-								outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
+								outputLOG.log(u'操作时间：'+threadData['operation']['operationTime'], 'DEBUG')
 								postLOG.log(threadData)
 
 								if postLOG.getLastError():
@@ -114,8 +115,10 @@ def autoDelete():
 								outputLOG.log(u'已确认删除帖子...', 'DEBUG')
 								outputLOG.log(u'正在删除', 'INFO')
 								if deleteThread(threadData, config['forum']):
+									threadData['operation']['operation'] = 'delete'
+									threadData['operation']['operationTime'] = getLogTime()
 									outputLOG.log(u'删除成功', 'SUCCESS')
-									outputLOG.log(u'操作时间：'+threadData['operationTime'], 'DEBUG')
+									outputLOG.log(u'操作时间：'+threadData['operation']['operationTime'], 'DEBUG')
 
 									postLOG.log(threadData)
 									if postLOG.getLastError():

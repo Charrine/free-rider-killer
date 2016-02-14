@@ -120,14 +120,17 @@ def getThreadDataList(forum):
 	for thread in threadList[topThreadNum:]:
 		dataField = json.loads(thread['data-field'])
 		threadData = {
-			'title' : thread.select('a.j_th_tit')[0].string,
-			'author' : dataField['author_name'],
-			'abstract' : str(thread.select('div.threadlist_abs')[0].string),
-			'tid' : dataField['id'],
-			'pid' : dataField['first_post_id'],
-			'goodThread' : dataField['is_good'],
-			'topThread' : dataField['is_top'],
-			'replyNum' : dataField['reply_num']
+			'thread' : {
+				'title' : thread.select('a.j_th_tit')[0].string,
+				'abstract' : str(thread.select('div.threadlist_abs')[0].string),
+				'tid' : dataField['id'],
+				'pid' : dataField['first_post_id'],
+				'goodThread' : dataField['is_good'],
+				'topThread' : dataField['is_top'],
+				'replyNum' : dataField['reply_num']
+			},
+			'author' : {
+				'userName' : dataField['author_name']
 		}
 		threadDataList.append(threadData)
 

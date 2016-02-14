@@ -5,16 +5,16 @@ from datetime import datetime
 
 def postToCloud(threadData, key):
     postdata = {
-        'title' : threadData['title'],
-        'author' : threadData['author'],
-        'abstract' : threadData['abstract'],
-        'tid' : threadData['tid'],
-        'pid' : threadData['pid'],
-        'replyNum' : threadData['replyNum'],
-        'operationTime' : threadData['operationTime'],
-        'grade' : threadData['grade'],
-        'keywords' : ','.join(threadData['keywords']),
-        'operation' : threadData['operation'],
+        'title' : threadData['thread']['title'],
+        'author' : threadData['author']['userName'],
+        'abstract' : threadData['thread']['abstract'],
+        'tid' : threadData['thread']['tid'],
+        'pid' : threadData['thread']['pid'],
+        'replyNum' : threadData['thread']['replyNum'],
+        'operationTime' : threadData['operation']['operationTime'],
+        'grade' : threadData['thread']['grade'],
+        'keywords' : ','.join(threadData['thread']['keywords']),
+        'operation' : threadData['operation']['operation'],
         'operator' : key,
 
     }
