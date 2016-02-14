@@ -10,9 +10,23 @@ import time
 import urllib
 import urllib2
 
-from log import *
+from log import getLogTime
 
 _cj = None
+
+def webIOInitialization(filename):
+	global _cj
+	_cj = cookielib.MozillaCookieJar()
+	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
+	urllib2.install_opener(opener)
+
+	if os.path.exists(filename):
+		_cj.load(filename, True)
+
+def getFid(forum):
+	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
+
+	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
 
 def adminLogin(user, filename = ''):
 	if isLogined():
@@ -43,6 +57,11 @@ def adminLogin(user, filename = ''):
 		else:
 			return False
 
+def isLogined():
+	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
+
+	return True if json.loads(data)['is_login'] == 1 else False;
+
 def deleteThread(threadData, forum):
 	postdata = {
 		'tbs' : _getTbs(),
@@ -56,7 +75,6 @@ def deleteThread(threadData, forum):
 		'is_finf' : 'false'
 	}
 	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-	data = json.loads(_decodeGzip(data))
 
 	if data['err_code'] == 0:
 		threadData['operation'] = 'delete'
@@ -66,12 +84,12 @@ def deleteThread(threadData, forum):
 		#TODO: log request save data
 		return False
 
-def blockID(threadData, forum, reason = ''):
+def blockID(author, forum, reason = ''):
 	constantPid = '82459413573'
 	postdata = {
 		'tbs' : _getTbs(),
 		'fid' : forum['fid'],
-		'user_name[]' : threadData['author'],
+		'user_name[]' : author,
 		'pids[]' : constantPid,
 		'day' : '1',
 		'ie' : 'utf-8'
@@ -79,7 +97,6 @@ def blockID(threadData, forum, reason = ''):
 	if not reason:
 		postdata['reason'] = '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
 	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
-	data = json.loads(_decodeGzip(data))
 
 	if data['err_code'] == 0:
 		threadData['operation'] = 'block'
@@ -115,29 +132,6 @@ def getThreadDataList(forum):
 		threadDataList.append(threadData)
 
 	return threadDataList
-
-def isLogined():
-	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
-
-	return True if json.loads(data)['is_login'] == 1 else False;
-
-def webIOInitialization(filename):
-	global _cj
-	_cj = cookielib.MozillaCookieJar()
-	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(_cj))
-	urllib2.install_opener(opener)
-
-	if os.path.exists(filename):
-		_cj.load(filename, True)
-
-	return
-
-def getFid(forum):
-	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
-
-	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
-
-#Local function
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
