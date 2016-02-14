@@ -5,12 +5,14 @@ import gzip
 import json
 import os
 import re
+import sys
 import StringIO
 import time
 import urllib
 import urllib2
 
-from log import getLogTime
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 _cj = None
 
@@ -62,13 +64,13 @@ def isLogined():
 
 	return True if json.loads(data)['is_login'] == 1 else False;
 
-def deleteThread(threadData, forum):
+def deleteThread(thread, forum):
 	postdata = {
 		'tbs' : _getTbs(),
 		'kw' : forum['kw'],
 		'fid' : forum['fid'],
-		'tid' : threadData['tid'],
-		'pid' : threadData['pid'],
+		'tid' : thread['tid'],
+		'pid' : thread['pid'],
 		'commit_fr' : 'pb',
 		'ie' : 'utf-8',
 		'is_vipdel' : '0',
@@ -77,8 +79,6 @@ def deleteThread(threadData, forum):
 	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
 
 	if data['err_code'] == 0:
-		threadData['operation'] = 'delete'
-		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		#TODO: log request save data
@@ -99,8 +99,6 @@ def blockID(author, forum, reason = ''):
 	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
 
 	if data['err_code'] == 0:
-		threadData['operation'] = 'block'
-		threadData['operationTime'] = getLogTime()
 		return True
 	else:
 		#TODO: log request save data
@@ -116,22 +114,45 @@ def getThreadDataList(forum):
 	threadList = html.select('.j_thread_list')
 	topThreadNum = len(html.select('.thread_top'))
 
-	threadDataList = []
-	for thread in threadList[topThreadNum:]:
-		dataField = json.loads(thread['data-field'])
-		threadData = {
+	#multiprocessing spend 01:06
+	pool = ThreadPool()
+	threadDataList = pool.map(_parseThreadData, threadList[topThreadNum:])
+
+	#single processing spend 01:27
+	#threadDataList = []
+	#for thread in threadList[topThreadNum:]:
+	#	threadDataList.append(_parseThreadData(thread))
+
+	return threadDataList
+
+def _parseThreadData(thread):
+	dataField = json.loads(thread['data-field'])
+	threadData = {
+		'thread' : {
 			'title' : thread.select('a.j_th_tit')[0].string,
-			'author' : dataField['author_name'],
-			'abstract' : str(thread.select('div.threadlist_abs')[0].string),
+			'abstract' : str(thread.select('div.threadlist_abs')[0].string).decode('utf-8'),
 			'tid' : dataField['id'],
 			'pid' : dataField['first_post_id'],
 			'goodThread' : dataField['is_good'],
 			'topThread' : dataField['is_top'],
 			'replyNum' : dataField['reply_num']
+		},
+		'author' : {
+			'userName' : dataField['author_name']
 		}
-		threadDataList.append(threadData)
+	}
+	_getThreadDetail(threadData)
 
-	return threadDataList
+	return threadData
+
+def _getThreadDetail(threadData):
+	data = _genericGet('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
+	data = bs4.BeautifulSoup(data, 'html5lib')
+	dataField = json.loads(data.select('.l_post')[0]['data-field'])
+	threadData['author']['userId'] = dataField['author']['user_id']
+	threadData['author']['userLevel'] = dataField['author']['level_id']
+	threadData['thread']['threadDate'] = dataField['content']['date']
+	threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
 
 def _genericPost(url, postdata):
 	request = urllib2.Request(url, urllib.urlencode(postdata))
