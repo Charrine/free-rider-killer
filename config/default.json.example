@@ -1,6 +1,12 @@
+/*
+username 是你的用户名
+password 是你的密码
+kw 是你管理的贴吧名字
+apikey 是云端服务器验证码，若没有请放空
+*/
 {
-	"username":"你的用户名",
-	"password":"你的密码",
+	"username" : "你的用户名",
+	"password" : "你的密码",
 	"kw" : "c语言",
-    "apikey" : "apikey"
+	"apikey" : ""
 }
