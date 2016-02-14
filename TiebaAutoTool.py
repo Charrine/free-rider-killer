@@ -94,7 +94,7 @@ def autoDelete():
 						postLOG.PrintPost(threadData)
 						if not config['debug']:
 							outputLOG.log(u'正在删除帖子', 'INFO')
-							if deleteThread(threadData, config['forum']):
+							if deleteThread(threadData['thread'], config['forum']):
 								threadData['operation']['operation'] = 'delete'
 								threadData['operation']['operationTime'] = getLogTime()
 								outputLOG.log(u'删除成功', 'SUCCESS')
@@ -114,7 +114,7 @@ def autoDelete():
 							if raw_input() == 'y':
 								outputLOG.log(u'已确认删除帖子...', 'DEBUG')
 								outputLOG.log(u'正在删除', 'INFO')
-								if deleteThread(threadData, config['forum']):
+								if deleteThread(threadData['thread'], config['forum']):
 									threadData['operation']['operation'] = 'delete'
 									threadData['operation']['operationTime'] = getLogTime()
 									outputLOG.log(u'删除成功', 'SUCCESS')
