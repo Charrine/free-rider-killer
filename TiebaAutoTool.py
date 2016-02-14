@@ -164,11 +164,7 @@ def init():
 	global outputLOG
 	global postLOG
 	global keywords
-	value = initialization()
-	config = value['config']
-	outputLOG = value['outputLOG']
-	postLOG = value['postLOG']
-	keywords = value['keywords']
+	config, keywords, outputLOG, postLOG = initialization()
 
 if __name__ == '__main__':
 	init()
