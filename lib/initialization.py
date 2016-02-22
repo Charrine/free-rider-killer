@@ -59,7 +59,7 @@ def _initConfig():
 
 def _parseArgument(config):
 	parser = argparse.ArgumentParser()
-	parser.add_argument('workingType', choices = ['delete', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
+	parser.add_argument('workingType', choices = ['delete', 'block', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
 	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为config/default.json', dest = 'configFilename', default = 'config/default.json')
 	parser.add_argument('-d', '--debug' ,     help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v', '--version' ,   help = u'显示此版本信息并退出', action = "version", version = '1.0')
@@ -67,6 +67,9 @@ def _parseArgument(config):
 
 	if args.workingType == 'delete':
 		config['workingType'] = 'autoDelete'
+		config['configFilename'] = args.configFilename
+	elif args.workingType == 'block':
+		config['workingType'] = 'autoBlock'
 		config['configFilename'] = args.configFilename
 	else:
 		config['workingType'] = 'config'
@@ -104,6 +107,20 @@ def _getKeywords():
 def _compileKeywords(keywords):
 	for i in range(len(keywords)):
 		keywords[i].append(re.compile(keywords[i][0], re.I))
+
+def initBlacklist():
+	try:
+		f = open('config/blacklist.txt', 'r')
+		try:
+			blacklist = json.load(f)
+		except Exception as e:
+			errLog(300, pause = False)
+			sys.exit(1)
+	except Exception as e:
+		errLog(200, pause = False)
+		sys.exit(1)
+
+	return blacklist
 
 def _initUserConfigration(config):
 	stdLog(u'用户配置文件：%s' % config['configFilename'], 'info')

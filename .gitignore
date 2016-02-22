@@ -12,3 +12,6 @@
 
 #keyword file
 keywords.txt
+
+#blacklist file
+blacklist.txt
