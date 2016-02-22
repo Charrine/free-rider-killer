@@ -43,12 +43,12 @@ def _judgeThread(threadData):
 	if threadData['thread']['goodThread'] == 0 and threadData['thread']['topThread'] == 0:
 		judge(threadData, keywords)
 		#only delete posts which has less than 10 replies
-		if threadData['thread']['grade'] > 6 and threadData['thread']['replyNum'] < 10:
+		if threadData['thread']['grade'] > -1 and threadData['thread']['replyNum'] < 10:
 			postLog(threadData, ('console'))
 			if not config['debug']:
 				return True
 			else:
-				print u'请确认是否删除（按y删除）:',
+				stdLog(u'请确认是否删除（按y删除）:', 'info', ('console'), '')
 				if raw_input() == 'y':
 					stdLog(u'已确认删除帖子...', 'debug')
 					return True

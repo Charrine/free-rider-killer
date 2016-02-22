@@ -83,27 +83,28 @@ def setStdLevel(level):
 	__STDLEVEL = __LOGLEVEL[level]
 	stdLog(u'设置日志等级为%s' % level, 'debug')
 
-def stdLog(message, logtype):
+def stdLog(message, logtype, method = None, end = '\n'):
 	"""标准日志输出
 		参数为 message 和 level，message 为将要输出的信息，level 为日志等级，
 		当日志等级高于当前设置的等级时，将向对应的设备输出信息
 		使用此函数不会记录调用栈"""
+	if not method:
+		method = __STDMETHOD
 	if __LOGTYPE[logtype][0] >= __STDLEVEL:
 		logtime = getLogTime()
+		if 'console' in method:
+			__logToConsole(message, logtype, end)
 
-		if 'console' in __STDMETHOD:
-			__logToConsole(message, logtype)
+		if 'file' in method:
+			__logToFile(message, logtype, logtime, end)
 
-		if 'file' in __STDMETHOD:
-			__logToFile(message, logtype, logtime)
+def __logToConsole(message, logtype, end):
+	sys.stdout.write(__LOGTYPE[logtype][2] + __LOGTYPE[logtype][1] + message + end)
 
-def __logToConsole(message, logtype):
-	print __LOGTYPE[logtype][2] + __LOGTYPE[logtype][1] + message
-
-def __logToFile(message, logtype, time):
+def __logToFile(message, logtype, time, end):
 	try:
 		with open(__LOGFILENAME['log'], mode = 'a') as f:
-			f.write(time + __LOGTYPE[logtype][1] + message + '\n')
+			f.write(time + __LOGTYPE[logtype][1] + message + end)
 	except IOError, e:
 		__errToConsole(201, getStack(), getLogTime(), True)
 
@@ -157,7 +158,7 @@ def getLogTime():
 	return datetime.now().strftime('%y/%m/%d %H:%M:%S.') + datetime.now().strftime('%f')[:2]
 
 def postLog(threadData, method = None, APIKey = ''):
-	if method == None:
+	if not method:
 		method = __POSTMETHOD
 
 	if 'file' in method:
