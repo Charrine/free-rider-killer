@@ -5,9 +5,10 @@ import re
 import sys
 
 from baiduOperation import webIOInitialization, getFid
-from stdlog import stdLog, errLog, setStdLevel
+from stdlog import logInitialization, stdLog, errLog, setStdLevel
 
 def initialization():
+	logInitialization()
 	stdLog(u'初始化中...', 'info')
 
 	stdLog(u'配置初始化中...', 'info')

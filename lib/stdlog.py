@@ -227,7 +227,7 @@ def __postToCloud(threadData, APIKey):
 		return False
 
 #在导入时进行些许初始化工作
-if __name__ == 'stdlog':
+def logInitialization():
 	colorama.init(autoreset = True)
 
 #下面为测试数据
