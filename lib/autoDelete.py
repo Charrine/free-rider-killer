@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import os
 import sys
 import time
 
@@ -13,12 +14,18 @@ def autoDelete(config):
 
 	stdLog(u'关键词初始化中...', 'info')
 	keywords = initKeywords()
+	lastModifiedTime = os.path.getmtime('config/keywords.txt')
 	stdLog(u'关键词初始化完毕', 'success')
 
 	stdLog(u'登录中...', 'info')
 	if adminLogin(config['user'], config['configFilename'][:-5] + '.co'):
 		stdLog(u'登陆成功', 'success')
 		while(True):
+			if lastModifiedTime != os.path.getmtime('config/keywords.txt'):
+				stdLog(u'更新关键词中...', 'info')
+				keywords = initKeywords()
+				lastModifiedTime = os.path.getmtime('config/keywords.txt')
+				stdLog(u'更新关键词完毕', 'success')
 			_delete(config, keywords)
 	else:
 		stdLog(u'登陆失败', 'error')
