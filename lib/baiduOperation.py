@@ -141,7 +141,7 @@ def _parseThreadData(thread):
 			'userName' : dataField['author_name']
 		}
 	}
-	_getThreadDetail(threadData)
+	# _getThreadDetail(threadData)
 
 	return threadData
 
