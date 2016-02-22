@@ -9,11 +9,11 @@ reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
 def main():
-	config, keywords = initialization()
+	config = initialization()
 	if config['workingType'] == 'config':
 		configFileGenerator(config)
-	elif config['workingType'] == 'autoTool':
-		autoDelete([config, keywords])
+	elif config['workingType'] == 'autoDelete':
+		autoDelete(config)
 
 if __name__ == '__main__':
 	main()

@@ -7,6 +7,8 @@ from baiduOperation import adminLogin
 from stdlog import stdLog, errLog
 
 def configFileGenerator(config):
+	stdLog(u'启动配置文件生成工具', 'info')
+
 	stdLog(u'请输入配置文件的文件名（按回车使用默认文件）：', 'info', ('console'), '')
 	filename = raw_input()
 	if filename == '':

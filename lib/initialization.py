@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 import argparse
 import json
+import os
 import re
 import sys
 
@@ -19,19 +20,15 @@ def initialization():
 	baiduInitialization(config['configFilename'][:-5] + '.co')
 	stdLog(u'网络初始化完毕', 'success')
 
-	keywords = []
 	if config['workingType'] == 'autoTool':
-		stdLog(u'关键词初始化中...', 'info')
-		keywords = initKeywords()
-		stdLog(u'关键词初始化完毕', 'success')
-
 		stdLog(u'用户配置文件初始化中...', 'info')
 		_initUserConfigration(config)
 		stdLog(u'用户配置文件初始化完毕', 'success')
 
 	stdLog(u'初始化完毕', 'success')
+	os.system('cls' if os.name == 'nt' else 'clear')
 
-	return [config, keywords]
+	return config
 
 def _initConfig():
 	config = {
@@ -44,7 +41,7 @@ def _initConfig():
 			'fid': 22545
 		},
 		'debug': False,
-		'workingType': 'autoTool',
+		'workingType': 'autoDelete',
 		'configFilename': 'config/default.json',
 		'stdincoding': 'utf8'
 	}
@@ -62,14 +59,14 @@ def _initConfig():
 
 def _parseArgument(config):
 	parser = argparse.ArgumentParser()
-	parser.add_argument('workingType', choices = ['run', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
+	parser.add_argument('workingType', choices = ['delete', 'config'], help = u'使用 "run" 来运行删帖机，使用 "config" 来生成一个用户配置文件')
 	parser.add_argument('-c', '--configfile', help = u'json 格式的 user 配置文件的路径，若未给出则默认为config/default.json', dest = 'configFilename', default = 'config/default.json')
 	parser.add_argument('-d', '--debug' ,     help = u'添加此参数即开启调试模式，删贴机将只对页面进行检测，而不会发送删帖/封禁请求', action = "store_true")
 	parser.add_argument('-v', '--version' ,   help = u'显示此版本信息并退出', action = "version", version = '1.0')
 	args = parser.parse_args()
 
-	if args.workingType == 'run':
-		config['workingType'] = 'autoTool'
+	if args.workingType == 'delete':
+		config['workingType'] = 'autoDelete'
 		config['configFilename'] = args.configFilename
 	else:
 		config['workingType'] = 'config'

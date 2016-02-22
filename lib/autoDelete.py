@@ -4,30 +4,33 @@ import time
 
 from bar import sleep
 from baiduOperation import adminLogin, getThreadDataList, deleteThread
+from initialization import initKeywords
 from judge import judge
 from stdlog import stdLog, postLog, getLogTime
 
-def autoDelete(params):
-	global config
-	global keywords
+def autoDelete(config):
+	stdLog(u'启动自动删贴机', 'info')
 
-	config, keywords = params
+	stdLog(u'关键词初始化中...', 'info')
+	keywords = initKeywords()
+	stdLog(u'关键词初始化完毕', 'success')
 
+	stdLog(u'登录中...', 'info')
 	if adminLogin(config['user'], config['configFilename'][:-5] + '.co'):
 		stdLog(u'登陆成功', 'success')
 		while(True):
-			_delete()
+			_delete(config, keywords)
 	else:
 		stdLog(u'登陆失败', 'error')
 		sys.exit(1)
 
-def _delete():
+def _delete(config, keywords):
 	deleteCount = 0
 	stdLog(u'获取首页...', 'info')
 	threadDataList = getThreadDataList(config['forum'])
 	for threadData in threadDataList:
-		if _judgeThread(threadData):
-			if _deleteThread(threadData):
+		if _judgeThread(threadData, config, keywords):
+			if _deleteThread(threadData, config):
 				deleteCount += 1
 				if not config['debug']:
 					sleep(5)
@@ -39,7 +42,7 @@ def _delete():
 	stdLog(u'等待更多新帖...', 'info')
 	sleep(60)
 
-def _judgeThread(threadData):
+def _judgeThread(threadData, config, keywords):
 	if threadData['thread']['goodThread'] == 0 and threadData['thread']['topThread'] == 0:
 		judge(threadData, keywords)
 		#only delete posts which has less than 10 replies
@@ -56,7 +59,7 @@ def _judgeThread(threadData):
 					stdLog(u'跳过删帖', 'debug')
 	return False
 
-def _deleteThread(threadData):
+def _deleteThread(threadData, config):
 	stdLog(u'正在删除帖子', 'info')
 	if deleteThread(threadData['thread'], config['forum']):
 		threadData['operation']['operation'] = 'delete'
