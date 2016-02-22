@@ -19,6 +19,7 @@ def initialization():
 	webIOInitialization(config['configFilename'][:-5] + '.co')
 	stdLog(u'网络初始化完毕', 'success')
 
+	keywords = []
 	if config['workingType'] == 'autoTool':
 		stdLog(u'关键词初始化中...', 'info')
 		keywords = initKeywords()
@@ -129,7 +130,7 @@ def _getUserConfigration(config):
 				config['forum']['kw']      = jsonObj['kw'].decode('utf8')
 				config['apikey']           = jsonObj['apikey'].decode('utf8')
 			else:
-				print u'无效的配置文件，请使用 TiebaAutoTool.py config 来生成配置文件'
+				stdLog(u'无效的配置文件，请使用 TiebaAutoTool.py config 来生成配置文件', 'info', ('console'))
 				sys.exit(1)
 		except Exception as e:
 			errLog(300, pause = False)

@@ -30,8 +30,8 @@ def getFid(forum):
 
 	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
 
-def adminLogin(user, filename = ''):
-	if isLogined():
+def adminLogin(user, filename = '', config = False):
+	if not config and isLogined():
 		return True
 	else:
 		postdata = {
