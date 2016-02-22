@@ -76,13 +76,13 @@ def deleteThread(thread, forum):
 		'is_vipdel' : '0',
 		'is_finf' : 'false'
 	}
-	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
-
-	if data['err_code'] == 0:
-		return True
-	else:
+	#data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
+	return True
+#	if data['err_code'] == 0:
+#		return True
+#	else:
 		#TODO: log request save data
-		return False
+#		return False
 
 def blockID(author, forum, reason = ''):
 	constantPid = '82459413573'
@@ -139,7 +139,8 @@ def _parseThreadData(thread):
 		},
 		'author' : {
 			'userName' : dataField['author_name']
-		}
+		},
+		'operation' : {}
 	}
 	# _getThreadDetail(threadData)
 

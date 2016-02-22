@@ -156,21 +156,21 @@ def errLog(errorNumber, pause = True):
 def getLogTime():
 	return datetime.now().strftime('%y/%m/%d %H:%M:%S.') + datetime.now().strftime('%f')[:2]
 
-def postLog(theadData, method = None, APIKey = ''):
+def postLog(threadData, method = None, APIKey = ''):
 	if method == None:
 		method = __POSTMETHOD
 
 	if 'file' in method:
-		__postToFile(theadData)
+		__postToFile(threadData)
 	if APIKey != '' and 'cloud' in method:
 		#发送日志并判断是否成功
-		if not __postToCloud(theadData, APIKey):
+		if not __postToCloud(threadData, APIKey):
 			#失败时输出错误信息
 			errLog(102, pause = False)
 	if 'console' in method:
-		__postToConsole(theadData)
+		__postToConsole(threadData)
 
-def __postToConsole(theadData):
+def __postToConsole(threadData):
 	print u'------------------------------------------'
 	print u'|作者：' + threadData['author']['userName']
 	print u'|帖子标题：' + threadData['thread']['title']
@@ -180,7 +180,7 @@ def __postToConsole(theadData):
 	print u'|得分：%f' % threadData['thread']['grade']
 	print u'-------------------------------------------'
 
-def __postToFile(theadData):
+def __postToFile(threadData):
 	try:
 		with open(__LOGFILENAME['post'], mode = 'a') as f:
 			string = ''+\
@@ -202,7 +202,7 @@ def __postToFile(theadData):
 	except IOError, e:
 		__errToConsole(201, getStack(), getLogTime(), True)
 
-def __postToCloud(theadData, APIKey):
+def __postToCloud(threadData, APIKey):
 	postdata = {
 		'title': threadData['thread']['title'],
 		'author': threadData['author']['userName'],
@@ -259,9 +259,8 @@ if __name__ == 'stdlog':
 # def f3():
 # 	stdLog('这是错误信息', 'error')
 # 	stdLog('普通信息', 'info')
-# 	stdLog('成功了会这样', 'success')
 # 	stdLog('调试信息', 'debug')
-
+# 	stdLog('成功了会这样', 'success')
 # colorama.init(autoreset = True)
 # f1()
 
