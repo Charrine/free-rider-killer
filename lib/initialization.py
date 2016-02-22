@@ -4,7 +4,7 @@ import json
 import re
 import sys
 
-from baiduOperation import webIOInitialization, getFid
+from baiduOperation import baiduInitialization, getFid
 from stdlog import logInitialization, stdLog, errLog, setStdLevel
 
 def initialization():
@@ -16,7 +16,7 @@ def initialization():
 	stdLog(u'配置初始化完毕', 'success')
 
 	stdLog(u'网络初始化中...', 'info')
-	webIOInitialization(config['configFilename'][:-5] + '.co')
+	baiduInitialization(config['configFilename'][:-5] + '.co')
 	stdLog(u'网络初始化完毕', 'success')
 
 	keywords = []
