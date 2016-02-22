@@ -27,7 +27,7 @@ def configFileGenerator(config):
 		print u'请输入用户名：',
 		config['user']['username'] = raw_input().decode(config['stdincoding'])
 		print u'请输入密码（无回显）',
-		config['user']['password'] = getpass.getpass(u'：')
+		config['user']['password'] = getpass.getpass(':')
 
 		print u'-----登陆测试-----'
 		if not config['debug']:
