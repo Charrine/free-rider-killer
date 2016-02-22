@@ -9,12 +9,11 @@ reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
 def main():
-	config, keywords, outputLOG, postLOG = initialization()
+	config, keywords = initialization()
 	if config['workingType'] == 'config':
 		configFileGenerator(config)
 	elif config['workingType'] == 'autoTool':
-		autoTool([config, keywords, outputLOG, postLOG])
-
+		autoTool([config, keywords])
 
 if __name__ == '__main__':
 	main()

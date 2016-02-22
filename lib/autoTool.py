@@ -5,7 +5,7 @@ import time
 from bar import sleep
 from baiduOperation import adminLogin, getThreadDataList, deleteThread
 from judge import judge
-from log import getLogTime
+from stdlog import getLogTime
 
 def autoTool(params):
 	global config

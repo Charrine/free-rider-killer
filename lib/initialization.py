@@ -5,69 +5,56 @@ import re
 import sys
 
 from baiduOperation import webIOInitialization, getFid
-from log import log
-
-outputLOG = None
+from stdlog import stdLog, errLog, setStdLevel
 
 def initialization():
-	global outputLOG
+	stdLog(u'初始化中...', 'info')
 
-	outputLOG = log(['console', 'file'], 'STRING', 'DEFAULT')
-	outputLOG.setOutputFile('log/console.log')
-
-	outputLOG.log(u'初始化中...', 'INFO')
-
-	outputLOG.log(u'配置初始化中...', 'INFO')
+	stdLog(u'配置初始化中...', 'info')
 	config = _initConfig()
-	outputLOG.log(u'配置初始化完毕', 'SUCCESS')
+	stdLog(u'配置初始化完毕', 'success')
 
-	outputLOG.log(u'网络初始化中...', 'INFO')
+	stdLog(u'网络初始化中...', 'info')
 	webIOInitialization(config['configFilename'][:-5] + '.co')
-	outputLOG.log(u'网络初始化完毕', 'SUCCESS')
+	stdLog(u'网络初始化完毕', 'success')
 
-	keywords = []
-	postLOG = None
 	if config['workingType'] == 'autoTool':
-		outputLOG.log(u'关键词初始化中...', 'INFO')
-		keywords = _initKeywords()
-		outputLOG.log(u'关键词初始化完毕', 'SUCCESS')
+		stdLog(u'关键词初始化中...', 'info')
+		keywords = initKeywords()
+		stdLog(u'关键词初始化完毕', 'success')
 
-		outputLOG.log(u'用户配置文件初始化中...', 'INFO')
+		stdLog(u'用户配置文件初始化中...', 'info')
 		_initUserConfigration(config)
-		outputLOG.log(u'用户配置文件初始化完毕', 'SUCCESS')
+		stdLog(u'用户配置文件初始化完毕', 'success')
 
-		postLOG = log(('file', 'cloud'), 'POST', key = config['apikey'])
-		postLOG.setOutputFile('log/record.log')
+	stdLog(u'初始化完毕', 'success')
 
-	outputLOG.log(u'初始化完毕', 'SUCCESS')
-
-	return [config, keywords, outputLOG, postLOG]
+	return [config, keywords]
 
 def _initConfig():
 	config = {
-		'user' : {
-			'username' : 'username',
-			'password' : 'password'
+		'user': {
+			'username': 'username',
+			'password': 'password'
 		},
-		'forum' : {
-			'kw' : u'c语言',
-			'fid' : 22545
+		'forum': {
+			'kw': u'c语言',
+			'fid': 22545
 		},
-		'debug' : False,
-		'workingType' : 'autoTool',
-		'configFilename' : 'config/default.json',
-		'stdincoding' : 'utf8',
-		'loglevel':'DEFAULT'
+		'debug': False,
+		'workingType': 'autoTool',
+		'configFilename': 'config/default.json',
+		'stdincoding': 'utf8'
 	}
 
 	_parseArgument(config)
 
 	if config['debug']:
-		outputLOG.setLevel('DEBUG')
-		outputLOG.log(u'已启用调试模式', 'DEBUG')
+		setStdLevel('debug')
+		stdLog(u'已启用调试模式', 'debug')
 
 	_getStdinCoding(config)
-	outputLOG.log(u'输入编码为：' + config['stdincoding'], 'DEBUG')
+	stdLog(u'输入编码为：' + config['stdincoding'], 'debug')
 
 	return config
 
@@ -93,41 +80,47 @@ def _getStdinCoding(config):
 	else:
 		config['stdincoding'] = 'utf8'
 
-def _initKeywords():
+def initKeywords():
 	keywords = _getKeywords()
-	outputLOG.log(u'获取关键词成功', 'SUCCESS')
+	stdLog(u'获取关键词成功', 'success')
 	_compileKeywords(keywords)
-	outputLOG.log(u'编译关键词成功', 'SUCCESS')
+	stdLog(u'编译关键词成功', 'success')
 
 	return keywords
 
 def _getKeywords():
 	try:
-		with open('config/keywords.txt', 'r') as f:
+		f = open('config/keywords.txt', 'r')
+		try:
 			keywords = eval(f.read().decode('utf8'))
-		return keywords
+		except Exception as e:
+			errLog(300, pause = False)
+			sys.exit(1)
 	except Exception as e:
-		outputLOG.log(u'无法得到 keywords，文件可能不存在或者格式可能不对', 'ERROR')
+		errLog(200, pause = False)
 		sys.exit(1)
+
+	return keywords
 
 def _compileKeywords(keywords):
 	for i in range(len(keywords)):
 		keywords[i].append(re.compile(keywords[i][0], re.I))
 
 def _initUserConfigration(config):
-	outputLOG.log(u'用户配置文件：%s' % config['configFilename'], 'INFO')
+	stdLog(u'用户配置文件：%s' % config['configFilename'], 'info')
 	_getUserConfigration(config)
-	outputLOG.log(u'获取用户配置文件成功', 'SUCCESS')
+	stdLog(u'获取用户配置文件成功', 'success')
 	config['forum']['fid'] = getFid(config['forum'])
-	outputLOG.log(u'获取贴吧fid成功', 'SUCCESS')
-	outputLOG.log(u'使用用户名：%s' % config['user']['username'], 'INFO')
-	outputLOG.log(u'管理贴吧：%s(%s)' % (config['forum']['kw'], config['forum']['fid']), 'INFO')
+	stdLog(u'获取贴吧fid成功', 'success')
+	stdLog(u'使用用户名：%s' % config['user']['username'], 'info')
+	stdLog(u'管理贴吧：%s(%s)' % (config['forum']['kw'], config['forum']['fid']), 'info')
 	if config['apikey']:
-		outputLOG.log(u'使用apikey：%s' % config['apikey'], 'INFO')
+		stdLog(u'使用apikey：%s' % config['apikey'], 'info')
 
 def _getUserConfigration(config):
 	try:
-		with open(config['configFilename'], 'r') as f:
+		f = open(config['configFilename'], 'r')
+		try:
 			jsonObj = json.load(f)
 			if ['apikey', 'kw', 'password', 'username'] == sorted(jsonObj.keys()):
 				config['user']['username'] = jsonObj['username'].decode('utf8')
@@ -137,6 +130,9 @@ def _getUserConfigration(config):
 			else:
 				print u'无效的配置文件，请使用 TiebaAutoTool.py config 来生成配置文件'
 				sys.exit(1)
+		except Exception as e:
+			errLog(300, pause = False)
+			sys.exit(1)
 	except Exception as e:
-		print u'无法得到 config，文件可能不存在或者格式可能不对'
+		errLog(200, pause = False)
 		sys.exit(1)
