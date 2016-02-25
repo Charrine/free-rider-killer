@@ -21,20 +21,32 @@ def autoBlock(config):
 	if adminLogin(config['user'], config['configFilename'][:-5] + '.co'):
 		stdLog(u'登陆成功', 'success')
 		while(True):
-			if lastModifiedTime != os.path.getmtime('config/blacklist.txt'):
-				stdLog(u'更新黑名单中...', 'info')
-				blacklist = initBlacklist()
-				lastModifiedTime = os.path.getmtime('config/blacklist.txt')
-				stdLog(u'更新黑名单完毕', 'success')
+			lastModifiedTime = _updateBlackList(lastModifiedTime)
 			s = sched.scheduler(time.time, time.sleep)
-			tomorrow = datetime.datetime.replace(datetime.datetime.now() + datetime.timedelta(days=1), hour=0, minute=0, second=0, microsecond=0)
+			tomorrow = datetime.datetime.replace(datetime.datetime.now() +
+												datetime.timedelta(days = 1),
+												hour = 0,
+												minute = 0,
+												second = 0,
+												microsecond = 0)
 			s.enter((tomorrow - datetime.datetime.now()).seconds, 1, _block, (config, blacklist))
 			s.run()
+			sleep(3600)
 	else:
 		stdLog(u'登陆失败', 'error')
 		sys.exit(1)
 
 def _block(config, blacklist):
 	for black in blacklist:
+		print black
 		blockID(black, config['forum'])
 		sleep(5)
+
+def _updateBlackList(lastModifiedTime):
+	if lastModifiedTime != os.path.getmtime('config/blacklist.txt'):
+		stdLog(u'更新黑名单中...', 'info')
+		blacklist = initBlacklist()
+		lastModifiedTime = os.path.getmtime('config/blacklist.txt')
+		stdLog(u'更新黑名单完毕', 'success')
+
+	return lastModifiedTime
