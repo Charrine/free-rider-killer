@@ -31,7 +31,6 @@ def autoBlock(config):
 												microsecond = 0)
 			s.enter((tomorrow - datetime.datetime.now()).seconds, 1, _block, (config, blacklist))
 			s.run()
-			sleep(3600)
 	else:
 		stdLog(u'登陆失败', 'error')
 		sys.exit(1)
