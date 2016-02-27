@@ -21,3 +21,7 @@ def judge(threadData, keywords):
 	grade = float(titleGrade) *0.8 / (len(threadData['thread']['title']) + len(preview) * 0.5) + float(previewGrade) * 1.2 / len(preview)
 
 	threadData['thread']['grade'] = float('%.2f' % grade)
+
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'

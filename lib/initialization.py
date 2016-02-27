@@ -152,3 +152,7 @@ def _getUserConfigration(config):
 	except Exception as e:
 		errLog(200, pause = False)
 		sys.exit(1)
+
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'

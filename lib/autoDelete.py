@@ -78,3 +78,6 @@ def _deleteThread(threadData, config):
 	else:
 		stdLog(u'删除失败', 'error')
 		return False
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'

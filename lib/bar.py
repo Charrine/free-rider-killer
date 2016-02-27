@@ -15,18 +15,28 @@ class bar(object):
 		sys.stdout.flush()
 
 	def wipe(self):
-		sys.stdout.write(' '*(self.width + 6)+'\r')
+		sys.stdout.write(' '*(self.width + 15)+'\r')
 		sys.stdout.flush()
 
 	def flush(self):
 		sys.stdout.write('\n')
 
-def sleep(sleeptime):
-	stat = bar(20, u'等待...', 's')
+def sleep(sleeptime, newline = None):
+	if newline == None:
+		newline = True
+
+	stat = bar(60, u'等待...', 's')
 	x = sleeptime
 	while x >= 0:
 		stat.update(x, float(sleeptime - x) / sleeptime)
 		time.sleep(1)
 		x -= 1
 
-	stat.flush()
+	if newline:
+		stat.flush()
+	else:
+		stat.wipe()
+
+# 直接运行则显示提示并退出
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'

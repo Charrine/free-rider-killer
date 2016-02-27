@@ -86,3 +86,6 @@ def configFileGenerator(config):
 			else:
 				stdLog(u'请使用 python2 TiebaAutoTool.py run -c %s 来使用本配置运行' % filename, 'info', ('console'))
 			break
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'
