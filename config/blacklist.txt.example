@@ -1,3 +1,6 @@
 [
-	"username"
+    {
+        "times": 365,
+        "username": "username"
+    }
 ]
