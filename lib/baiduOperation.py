@@ -195,3 +195,7 @@ def _getToken():
 	token = json.loads(data.replace('\'', '"'))['data']['token']
 
 	return token
+
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'

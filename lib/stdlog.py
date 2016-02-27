@@ -231,7 +231,12 @@ def __postToCloud(threadData, APIKey):
 def logInitialization():
 	colorama.init(autoreset = True)
 
-#下面为测试数据
+
+
+if __name__ == '__main__':
+	print u'本模块只应被导入执行'
+
+#下面为测试数据，如果你要进行测试，请将下列代码解除注释
 #threadData = {
 #	'operation': {
 #		'operation': 'delete',
@@ -250,7 +255,7 @@ def logInitialization():
 #		'userName': 'YukiSora'
 #	}
 #}
-#下面为测试代码，如果你要进行测试，请解除注释下列代码
+#下面为测试代码
 # def f1():
 # 	f2()
 
