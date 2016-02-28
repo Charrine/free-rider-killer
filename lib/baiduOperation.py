@@ -26,7 +26,7 @@ def baiduInitialization(filename):
 		_cj.load(filename, True)
 
 def getFid(forum):
-	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
+	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'])
 
 	return re.search(r'.+"forum_info":{"forum_id":(?P<fid>\d*),.+', data).group('fid')
 
@@ -41,7 +41,7 @@ def adminLogin(user, filename = '', config = False):
 			'username' : user['username'],
 			'password' : user['password'],
 		}
-		data = _genericPost('https://passport.baidu.com/v2/api/?login', postdata)
+		data = _request('https://passport.baidu.com/v2/api/?login', postdata)
 		err_code = int(re.search(r'error=(?P<err_code>\d+)', data).group('err_code'))
 
 		if err_code == 0:
@@ -58,7 +58,7 @@ def adminLogin(user, filename = '', config = False):
 #			sys.exit()
 
 def isLogined():
-	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
+	data = _request('http://tieba.baidu.com/dc/common/tbs')
 
 	return True if json.loads(data)['is_login'] == 1 else False;
 
@@ -74,7 +74,7 @@ def deleteThread(thread, forum):
 		'is_vipdel': '0',
 		'is_finf': 'false'
 	}
-	data = _genericPost('http://tieba.baidu.com/f/commit/post/delete', postdata)
+	data = _request('http://tieba.baidu.com/f/commit/post/delete', postdata)
 	data = json.loads(data)
 
 	if data['err_code'] == 0:
@@ -94,7 +94,7 @@ def blockID(author, forum, reason = ''):
 	}
 	if not reason:
 		postdata['reason'] = '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
-	data = _genericPost('http://tieba.baidu.com/pmc/blockid', postdata)
+	data = _request('http://tieba.baidu.com/pmc/blockid', postdata)
 	data = json.loads(data)
 
 	if data['errno'] == 0:
@@ -103,7 +103,7 @@ def blockID(author, forum, reason = ''):
 		return False
 
 def getThreadDataList(forum):
-	data = _genericGet('http://tieba.baidu.com/f?kw=' + forum['kw'])
+	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'])
 
 	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶),
 	# there will be a error occured when you trying to print threadData['abstract'] to console
@@ -139,7 +139,7 @@ def _parseThreadData(thread):
 	return threadData
 
 def _getThreadDetail(threadData):
-	data = _genericGet('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
+	data = _request('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
 	data = bs4.BeautifulSoup(data, 'html5lib')
 	dataField = json.loads(data.select('.l_post')[0]['data-field'])
 	threadData['author']['userId'] = dataField['author']['user_id']
@@ -147,29 +147,27 @@ def _getThreadDetail(threadData):
 	threadData['thread']['threadDate'] = dataField['content']['date']
 	threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
 
-def _genericPost(url, postdata):
-	request = urllib2.Request(url, urllib.urlencode(postdata))
-	request.add_header('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
-	request.add_header('Accept-Encoding', 'gzip,deflate,sdch')
-	request.add_header('Accept-Language', 'zh-CN,zh;q=0.8')
-	request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.72 Safari/537.36')
-	request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+def _request(url, postdata = ''):
+	if postdata:
+		request = urllib2.Request(url, urllib.urlencode(postdata))
+	else:
+		request = urllib2.Request(url)
 
-	return _decodeGzip(_genericGet(request))
+	return _decodeGzip(_urlopen(request))
 
-def _genericGet(url):
+def _urlopen(request):
 	i = 0
 	while i < 20:
 		i += 1
 		try:
-			connection = urllib2.urlopen(url, timeout = 10)
+			connection = urllib2.urlopen(request, timeout = 10)
 		except Exception as e:
-			sys.sleep(i ** 2)
+			time.sleep(i ** 2)
 		else:
 			if connection.getcode() == 200:
 				return connection.read()
 			else:
-				sys.sleep(i ** 2)
+				time.sleep(i ** 2)
 
 def _decodeGzip(data):
 	try:
@@ -185,13 +183,13 @@ def _decodeGzip(data):
 	return data
 
 def _getTbs():
-	data = _genericGet('http://tieba.baidu.com/dc/common/tbs')
+	data = _request('http://tieba.baidu.com/dc/common/tbs')
 	tbs = json.loads(data)['tbs']
 
 	return tbs
 
 def _getToken():
-	data = _genericGet('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login')
+	data = _request('https://passport.baidu.com/v2/api/?getapi&tpl=pp&apiver=v3&class=login')
 	token = json.loads(data.replace('\'', '"'))['data']['token']
 
 	return token
