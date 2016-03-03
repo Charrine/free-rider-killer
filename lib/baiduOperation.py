@@ -101,6 +101,9 @@ def blockID(author, forum, reason = ''):
 		return True
 	else:
 		return False
+#	elif data['err_code'] == 74:
+#		print 'user doesn't exist'
+#		sys.exit()
 
 def getThreadDataList(forum):
 	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'])
@@ -153,11 +156,16 @@ def _request(url, postdata = ''):
 	else:
 		request = urllib2.Request(url)
 
+	request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0')
+	request.add_header('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
+	request.add_header('Accept-Language', 'zh-CN,zh;q=0.8')
+	request.add_header('Accept-Encoding', 'gzip, deflate')
+
 	return _decodeGzip(_urlopen(request))
 
 def _urlopen(request):
 	i = 0
-	while i < 20:
+	while i < 10:
 		i += 1
 		try:
 			connection = urllib2.urlopen(request, timeout = 10)
@@ -193,7 +201,6 @@ def _getToken():
 	token = json.loads(data.replace('\'', '"'))['data']['token']
 
 	return token
-
 
 if __name__ == '__main__':
 	print u'本模块只应被导入执行'
