@@ -106,7 +106,7 @@ def blockID(author, forum, reason = ''):
 #		sys.exit()
 
 def getThreadDataList(forum):
-	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'])
+	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'] + '&pn=0&apage=1')
 
 	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶),
 	# there will be a error occured when you trying to print threadData['abstract'] to console
