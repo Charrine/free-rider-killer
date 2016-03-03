@@ -137,7 +137,7 @@ def _parseThreadData(thread):
 		},
 		'operation': {}
 	}
-	_getThreadDetail(threadData)
+	#_getThreadDetail(threadData)
 
 	return threadData
 
@@ -184,7 +184,6 @@ def _urlopen(request):
 				return connection.read()
 			else:
 				time.sleep(i ** 2)
-		print "poi"
 
 def _decodeGzip(data):
 	try:
