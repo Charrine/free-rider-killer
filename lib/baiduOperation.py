@@ -145,7 +145,6 @@ def _getThreadDetail(threadData):
 	data = _request('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']) + '?pn=1&ajax=1')
 	data = bs4.BeautifulSoup(data, 'html5lib')
 	dataField = json.loads(data.select('.l_post')[0]['data-field'])
-	threadData['author']['userId'] = dataField['author']['user_id']
 	threadData['author']['userLevel'] = dataField['author']['level_id']
 	threadData['thread']['threadDate'] = dataField['content']['date']
 	threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
@@ -176,6 +175,7 @@ def _urlopen(request):
 				return connection.read()
 			else:
 				time.sleep(i ** 2)
+		print "poi"
 
 def _decodeGzip(data):
 	try:
