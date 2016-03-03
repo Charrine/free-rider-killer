@@ -137,12 +137,12 @@ def _parseThreadData(thread):
 		},
 		'operation': {}
 	}
-	# _getThreadDetail(threadData)
+	_getThreadDetail(threadData)
 
 	return threadData
 
 def _getThreadDetail(threadData):
-	data = _request('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']))
+	data = _request('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']) + '?pn=1&ajax=1')
 	data = bs4.BeautifulSoup(data, 'html5lib')
 	dataField = json.loads(data.select('.l_post')[0]['data-field'])
 	threadData['author']['userId'] = dataField['author']['user_id']
