@@ -20,7 +20,7 @@ def initialization():
 	baiduInitialization(config['configFilename'][:-5] + '.co')
 	stdLog(u'网络初始化完毕', 'success')
 
-	if config['workingType'] == 'autoTool':
+	if config['workingType'] == 'autoDelete' or config['workingType'] == 'autoBlock':
 		stdLog(u'用户配置文件初始化中...', 'info')
 		_initUserConfigration(config)
 		stdLog(u'用户配置文件初始化完毕', 'success')
@@ -41,7 +41,7 @@ def _initConfig():
 			'fid': 22545
 		},
 		'debug': False,
-		'workingType': 'autoDelete',
+		'workingType': '',
 		'configFilename': 'config/default.json',
 		'stdincoding': 'utf8'
 	}
