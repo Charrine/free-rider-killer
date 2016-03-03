@@ -44,26 +44,25 @@ def _delete(config, keywords):
 			else:
 				sleep(5)
 				return
+
 	if deleteCount != 0:
 		stdLog(u'删除 {0} 个帖子'.format(deleteCount), 'info')
 	stdLog(u'等待更多新帖...', 'info')
-	sleep(60)
+	sleep(_getSleepTime(deleteCount))
 
 def _judgeThread(threadData, config, keywords):
-	if threadData['thread']['goodThread'] == 0 and threadData['thread']['topThread'] == 0:
-		judge(threadData, keywords)
-		#only delete posts which has less than 10 replies
-		if threadData['thread']['grade'] > 6 and threadData['thread']['replyNum'] < 10:
-			postLog(threadData, ('console'))
-			if not config['debug']:
+	if judge(threadData, keywords):
+		postLog(threadData, ('console'))
+		if not config['debug']:
+			return True
+		else:
+			stdLog(u'请确认是否删除（按y删除）:', 'info', ('console'), '')
+			if raw_input() == 'y':
+				stdLog(u'已确认删除帖子...', 'debug')
 				return True
 			else:
-				stdLog(u'请确认是否删除（按y删除）:', 'info', ('console'), '')
-				if raw_input() == 'y':
-					stdLog(u'已确认删除帖子...', 'debug')
-					return True
-				else:
-					stdLog(u'跳过删帖', 'debug')
+				stdLog(u'跳过删帖', 'debug')
+
 	return False
 
 def _deleteThread(threadData, config):
@@ -78,6 +77,9 @@ def _deleteThread(threadData, config):
 	else:
 		stdLog(u'删除失败', 'error')
 		return False
+
+def _getSleepTime(deleteCount):
+	return 60
 
 if __name__ == '__main__':
 	print u'本模块只应被导入执行'
