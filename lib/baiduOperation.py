@@ -145,9 +145,18 @@ def _getThreadDetail(threadData):
 	data = _request('http://tieba.baidu.com/p/' + str(threadData['thread']['tid']) + '?pn=1&ajax=1')
 	data = bs4.BeautifulSoup(data, 'html5lib')
 	dataField = json.loads(data.select('.l_post')[0]['data-field'])
-	threadData['author']['userLevel'] = dataField['author']['level_id']
-	threadData['thread']['threadDate'] = dataField['content']['date']
-	threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
+	if dataField['content']['is_anonym'] == 1:
+		threadData['author']['is_anonym'] = True
+		threadData['author']['userLevel'] = '0'
+		threadData['author']['userLevel'] = '0'
+		threadData['thread']['threadDate'] = dataField['content']['date']
+		threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
+	else:
+		threadData['author']['is_anonym'] = False
+		threadData['author']['userLevel'] = dataField['author']['level_id']
+		threadData['author']['userLevel'] = dataField['author']['user_id']
+		threadData['thread']['threadDate'] = dataField['content']['date']
+		threadData['thread']['content'] = data.select('#post_content_' + str(threadData['thread']['pid']))[0].text
 
 def _request(url, postdata = ''):
 	if postdata:
