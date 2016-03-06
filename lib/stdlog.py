@@ -7,8 +7,6 @@ import sys
 import urllib
 import urllib2
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
 
 #日志等级
 __LOGLEVEL = {
@@ -37,7 +35,7 @@ __STDMETHOD = ('console', 'file')
 #console： 输出到控制台窗口
 #file： 输出到指定文件
 #cloud： 输出到云
-__POSTMETHOD = ('console', 'file', 'cloud')
+__POSTMETHOD = ('console', 'file')
 
 #错误输出方法，默认为终端和文件
 __ERRMETHON = ('console', 'file')
