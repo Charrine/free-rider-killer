@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 import datetime
+from datetime import datetime
 import json
 import os
 import sched
@@ -42,10 +43,12 @@ def autoBlock(config):
 def _block(config, blacklist):
 	for black in blacklist:
 		if black['times'] > 0:
-			print black['username']
+			print '%s %s' % (datetime.now().strftime('%y/%m/%d %H:%M:%S'), black['username'])
 			blockID(black['username'], config['forum'])
 			black['times'] -= 1
 			time.sleep(5)
+		else:
+			del black
 
 def _saveBlacklist(blacklist):
 	with open('config/blacklist.txt', 'w') as f:
