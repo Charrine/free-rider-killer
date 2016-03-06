@@ -7,6 +7,7 @@ import sys
 
 from baiduOperation import baiduInitialization, getFid
 from stdlog import logInitialization, stdLog, errLog, setStdLevel
+from fileIO import isFileUpdated
 
 def initialization():
 	logInitialization()
@@ -82,13 +83,17 @@ def _getStdinCoding(config):
 	else:
 		config['stdincoding'] = 'utf8'
 
-def initKeywords():
-	keywords = _getKeywords()
-	stdLog(u'获取关键词成功', 'success')
-	_compileKeywords(keywords)
-	stdLog(u'编译关键词成功', 'success')
+def initKeywords(keywords):
 
-	return keywords
+	if isFileUpdated("config/keywords.txt"):
+		del keywords[:]
+		keywords.extend(_getKeywords())
+		stdLog(u'获取关键词成功', 'success')
+		_compileKeywords(keywords)
+		stdLog(u'编译关键词成功', 'success')
+		return True
+	else:
+		return False
 
 def _getKeywords():
 	try:

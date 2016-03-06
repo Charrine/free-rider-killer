@@ -20,21 +20,17 @@ __CURRENTSLEEPLEVEL__ = 0
 
 def autoDelete(config):
 	stdLog(u'启动自动删贴机', 'info')
-
 	stdLog(u'关键词初始化中...', 'info')
-	keywords = initKeywords()
-	lastModifiedTime = os.path.getmtime('config/keywords.txt')
-	stdLog(u'关键词初始化完毕', 'success')
+	keywords = list()
+	if initKeywords(keywords):
+		stdLog(u'关键词初始化完毕', 'success')
 
 	stdLog(u'登录中...', 'info')
 	if adminLogin(config['user'], config['configFilename'][:-5] + '.co'):
 		stdLog(u'登陆成功', 'success')
 		while(True):
-			if lastModifiedTime != os.path.getmtime('config/keywords.txt'):
-				stdLog(u'更新关键词中...', 'info')
-				keywords = initKeywords()
-				lastModifiedTime = os.path.getmtime('config/keywords.txt')
-				stdLog(u'更新关键词完毕', 'success')
+			if initKeywords(keywords):
+			 	stdLog("更新关键词成功！", "success")
 			_delete(config, keywords)
 	else:
 		stdLog(u'登陆失败', 'error')
@@ -56,8 +52,12 @@ def _delete(config, keywords):
 
 	if deleteCount != 0:
 		stdLog(u'删除 {0} 个帖子'.format(deleteCount), 'info')
-	stdLog(u'等待更多新帖...', 'info')
-	_smartSleep(deleteCount)
+	#仅在未开启调试，且删帖数为0时才显示
+	elif not config['debug']:
+		stdLog(u'等待更多新帖...', 'info')
+		_smartSleep(deleteCount)
+	else :
+		sleep(5)
 
 def _judgeThread(threadData, config, keywords):
 	if judge(threadData, keywords):

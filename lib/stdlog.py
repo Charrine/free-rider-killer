@@ -203,16 +203,16 @@ def __postToFile(threadData):
 
 def __postToCloud(threadData, APIKey):
 	postdata = {
-		'title': threadData['thread']['title'],
-		'author': threadData['author']['userName'],
-		'abstract': threadData['thread']['abstract'],
+		'title': threadData['thread']['title'].encode('utf8'),
+		'author': threadData['author']['userName'].encode('utf8'),
+		'abstract': threadData['thread']['abstract'].encode('utf8'),
 		'tid': threadData['thread']['tid'],
 		'pid': threadData['thread']['pid'],
 		'replyNum': threadData['thread']['replyNum'],
 		'operationTime': threadData['operation']['operationTime'],
 		'grade': threadData['thread']['grade'],
-		'keywords': ', '.join(threadData['thread']['keywords']),
-		'forum': threadData['forum'],
+		'keywords': ', '.join(threadData['thread']['keywords']).encode('utf8'),
+		'forum': threadData['forum'].encode('utf8'),
 		'operator': APIKey
 	}
 	#"http://tieba.yangwang.hk/create.php"
@@ -220,7 +220,6 @@ def __postToCloud(threadData, APIKey):
 	request = urllib2.Request("http://tieba.yangwang.hk/create.php", urllib.urlencode(postdata))
 	connection = urllib2.urlopen(request, timeout = 10)
 	code = json.loads(connection.read())['code']
-
 	if code == 0:
 		return True
 	else:
