@@ -213,6 +213,7 @@ def __postToCloud(threadData, APIKey):
 		'grade': threadData['thread']['grade'],
 		'keywords': ', '.join(threadData['thread']['keywords']),
 		'operation': threadData['operation']['operation'],
+        'forum': threadData['forum'],
 		'operator': APIKey
 	}
 	#"http://tieba.yangwang.hk/tieba/post.php"
