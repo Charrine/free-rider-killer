@@ -77,8 +77,7 @@ def _judgeThread(threadData, config, keywords):
 def _deleteThread(threadData, config):
 	stdLog(u'正在删除帖子', 'info')
 	if deleteThread(threadData['thread'], config['forum']):
-        threadData['forum'] = config['forum']
-		threadData['operation']['operation'] = 'delete'
+		threadData['forum'] = config['forum']['kw']
 		threadData['operation']['operationTime'] = getLogTime()
 		stdLog(u'删除成功', 'success')
 		stdLog(u'操作时间：' + threadData['operation']['operationTime'], 'debug')

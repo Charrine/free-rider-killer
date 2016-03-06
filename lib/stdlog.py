@@ -184,7 +184,7 @@ def __postToFile(threadData):
 		with open(__LOGFILENAME['post'], mode = 'a') as f:
 			string = ''+\
 				'{\n'+\
-				'    "type": "' + threadData['operation']['operation'] +'",\n'+\
+				'    "forum": "' + threadData['forum'] +'",\n'+\
 				'    "data": {\n'+\
 				'        "time": "' + threadData['operation']['operationTime'] + '",\n'+\
 				'        "tid": "' + str(threadData['thread']['tid']) + '",\n'+\
@@ -212,12 +212,12 @@ def __postToCloud(threadData, APIKey):
 		'operationTime': threadData['operation']['operationTime'],
 		'grade': threadData['thread']['grade'],
 		'keywords': ', '.join(threadData['thread']['keywords']),
-		'operation': threadData['operation']['operation'],
-        'forum': threadData['forum'],
+		'forum': threadData['forum'],
 		'operator': APIKey
 	}
-	#"http://tieba.yangwang.hk/tieba/post.php"
-	request = urllib2.Request("http://localhost/tieba/index.php?method=create", urllib.urlencode(postdata))
+	#"http://tieba.yangwang.hk/create.php"
+	#"http://localhost/tieba/create.php"
+	request = urllib2.Request("http://tieba.yangwang.hk/create.php", urllib.urlencode(postdata))
 	connection = urllib2.urlopen(request, timeout = 10)
 	code = json.loads(connection.read())['code']
 
@@ -237,8 +237,8 @@ if __name__ == '__main__':
 
 #下面为测试数据，如果你要进行测试，请将下列代码解除注释
 #threadData = {
+#	'forum': 'c语言',
 #	'operation': {
-#		'operation': 'delete',
 #		'operationTime': '16/02/22 21:44:44.66',
 #	},
 #	'thread': {
