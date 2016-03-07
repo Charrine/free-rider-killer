@@ -90,7 +90,8 @@ def blockID(author, forum, reason = ''):
 		'user_name[]': author,
 		'pids[]': constantPid,
 		'day': '1',
-		'ie': 'utf-8'
+		'ie': 'utf-8',
+		'reason': reason
 	}
 	if not reason:
 		postdata['reason'] = '根据帖子标题或内容，判定出现 伸手，作业，课设，作弊，二级考试，广告，无意义水贴，不文明言行或对吧务工作造成干扰等（详见吧规）违反吧规的行为中的至少一种，给予封禁处罚。如有问题请使用贴吧的申诉功能。'
