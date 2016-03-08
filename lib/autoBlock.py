@@ -43,7 +43,9 @@ def _block(config, blacklist):
 	for black in blacklist:
 		if black['times'] > 0:
 			print '%s %s' % (datetime.datetime.now().strftime('%y/%m/%d %H:%M:%S'), black['username'])
-			blockID(black['username'], config['forum'])
+			blockID(black['username'],
+					config['forum'],
+					'你在%s吧黑名单中，剩余%d天解封。' % (config['forum']['kw'], black['times'] - 1))
 			black['times'] -= 1
 			time.sleep(5)
 		else:
