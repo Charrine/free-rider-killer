@@ -11,9 +11,6 @@ import time
 import urllib
 import urllib2
 
-from multiprocessing import Pool
-from multiprocessing.dummy import Pool as ThreadPool
-
 _cj = None
 
 def baiduInitialization(filename):
@@ -116,8 +113,9 @@ def getThreadDataList(forum):
 	threadList = html.select('.j_thread_list')
 	topThreadNum = len(html.select('.thread_top'))
 
-	pool = ThreadPool()
-	threadDataList = pool.map(_parseThreadData, threadList[topThreadNum:])
+	threadDataList = []
+	for thread in threadList[topThreadNum:]:
+		threadDataList.append(_parseThreadData(thread))
 
 	return threadDataList
 
