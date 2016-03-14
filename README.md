@@ -8,11 +8,11 @@ http://www.tiebamanager.xyz
 
 ### 删贴机
 
-`python2 TiebaAutoTool.py delete`
+`python2 TiebaManager.py delete`
 
 ### 封禁机
 
-`python2 TiebaAutoTool.py block`
+`python2 TiebaManager.py block`
 
 请使用-h参数来查看帮助
 
