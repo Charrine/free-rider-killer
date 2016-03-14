@@ -215,9 +215,9 @@ def __postToCloud(threadData, APIKey):
 		'forum': threadData['forum'].encode('utf8'),
 		'operator': APIKey
 	}
-	#"http://tieba.yangwang.hk/create.php"
+	#"http://log.tiebamanager.xyz/create.php"
 	#"http://localhost/tieba/create.php"
-	request = urllib2.Request("http://tieba.yangwang.hk/create.php", urllib.urlencode(postdata))
+	request = urllib2.Request("http://log.tiebamanager.xyz/create.php", urllib.urlencode(postdata))
 	connection = urllib2.urlopen(request, timeout = 10)
 	code = json.loads(connection.read())['code']
 	if code == 0:
