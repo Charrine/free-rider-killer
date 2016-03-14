@@ -27,7 +27,7 @@ def grade(threadData, keywords):
 			threadData['thread']['keywords'].append(keyword[0])
 			previewGrade += len(arr) * keyword[1]
 
-	grade = float(titleGrade) *0.8 / (len(threadData['thread']['title']) + len(preview) * 0.5) + float(previewGrade) * 1.2 / len(preview)
+	grade = float(titleGrade)  / (len(threadData['thread']['title']) + len(preview) * 0.5 - 0.5* len(re.findall(r'[a-zA-Z0-9]', preview))) + float(previewGrade) * 1.2 / len(preview)
 
 	threadData['thread']['grade'] = float('%.2f' % grade)
 
