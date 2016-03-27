@@ -215,15 +215,20 @@ def __postToCloud(threadData, APIKey):
 		'forum': threadData['forum'].encode('utf8'),
 		'operator': APIKey
 	}
-	#"http://log.tiebamanager.xyz/create.php"
-	#"http://localhost/tieba/create.php"
-	request = urllib2.Request("http://log.tiebamanager.xyz/create.php", urllib.urlencode(postdata))
-	connection = urllib2.urlopen(request, timeout = 10)
-	code = json.loads(connection.read())['code']
-	if code == 0:
-		return True
-	else:
-		return False
+	i = 0
+	while i < 3:
+		i += 1
+		try:
+			request = urllib2.Request("http://log.tiebamanager.xyz/create.php", urllib.urlencode(postdata))
+			connection = urllib2.urlopen(request, timeout = 10)
+			code = json.loads(connection.read())['code']
+		except Exception as e:
+			time.sleep(i ** 2)
+		else:
+			if code == 0:
+				return True
+			else:
+				return False
 
 #在导入时进行些许初始化工作
 def logInitialization():
