@@ -104,11 +104,12 @@ def blockID(author, forum, reason = ''):
 #		sys.exit()
 
 def getThreadDataList(forum):
-	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'] + '&pn=0&apage=1')
+	data = _request('http://tieba.baidu.com/f?kw=' + forum['kw'])
 
 	# if there is a special utf-8 charactor in html that cannot decode to 'gbk' (eg. 🐶),
 	# there will be a error occured when you trying to print threadData['abstract'] to console
 	html = data.decode('utf8').encode('gbk','replace').decode('gbk')
+	html = data.replace('<!--', '').replace('-->', '')
 	html = bs4.BeautifulSoup(html, 'html5lib')
 	threadList = html.select('.j_thread_list')
 	topThreadNum = len(html.select('.thread_top'))

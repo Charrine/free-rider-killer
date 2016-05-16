@@ -2,7 +2,7 @@
 import re
 
 def judge(threadData, keywords):
-	if threadData['thread']['goodThread'] == 0 and threadData['thread']['topThread'] == 0:
+	if threadData['thread']['goodThread'] == None and threadData['thread']['topThread'] == None:
 		grade(threadData, keywords)
 		#only delete posts which has less than 10 replies
 		if threadData['thread']['grade'] > 6 and threadData['thread']['replyNum'] < 10:
